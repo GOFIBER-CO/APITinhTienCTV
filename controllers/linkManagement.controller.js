@@ -2,6 +2,7 @@ const LinkManagement = require("../models/linkManagement.model");
 const LinkManagementService = require("../services/linkManagement.service");
 const { dashLogger } = require("../logger");
 const ResponseModel = require("../helpers/ResponseModel");
+const googleDoc = require("../helpers/google.doc");
 
 const NAME = "Link Management";
 
@@ -43,19 +44,24 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { title } = req.body;
+    const { link_post } = req.body;
 
-    const checkExist = await LinkManagement.findOne({ title });
+    if (!link_post)
+      return res.status(400).json({ messages: `Link post not exist` });
 
-    if (checkExist)
-      return res.status(400).json({ messages: `${NAME} is already exist` });
+    const doc = await googleDoc.printDoc(link_post);
 
-    const linkManagement = await LinkManagementService.create(req.body);
+    const { title, body } = doc?.data;
+
+    let number_word = 0;
+    let number_image = 0;
+
+    // const linkManagement = await LinkManagementService.create(req.body);
 
     return res.status(200).json({
       success: true,
       message: "Success",
-      data: linkManagement,
+      data: result?.data,
     });
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
