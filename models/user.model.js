@@ -21,8 +21,8 @@ const userSchema = new mongoose.Schema(
       type: Number,
     },
     role: {
-      type: mongoose.Types.ObjectId,
-      ref: "Role",
+      type: String,
+      require: true,
     },
     avatar: {
       type: String,
