@@ -8,7 +8,13 @@ const LINK_STATUS = {
   PENDING: 2,
 };
 
+const OWNER_CONFIRM = {
+  CONFIRMED: 1,
+  PENDING: 2,
+};
+
 module.exports = {
   USER_STATUS,
   LINK_STATUS,
+  OWNER_CONFIRM,
 };

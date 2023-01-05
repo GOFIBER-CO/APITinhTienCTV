@@ -1,3 +1,4 @@
+const Collaborator = require("../models/collaborator.model");
 const Domain = require("../models/domain.model");
 
 const create = async (data) => {
@@ -81,9 +82,30 @@ const getById = async (id) => {
   }
 };
 
+const getDomainsWithCalculate = async () => {
+  try {
+    const result = await Domain.aggregate([
+      {
+        $lookup: {
+          from: "collaborators",
+          localField: "_id",
+          foreignField: "domain_id",
+          as: "child",
+        },
+      },
+    ]);
+
+    return result;
+  } catch (error) {
+    console.log("dsad", error);
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   update,
   search,
   getById,
+  getDomainsWithCalculate,
 };

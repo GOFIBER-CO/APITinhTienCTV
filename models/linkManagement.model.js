@@ -21,6 +21,11 @@ const linkManagementSchema = new mongoose.Schema(
       require: true,
       min: 0,
     },
+    number_images: {
+      type: Number,
+      require: true,
+      min: 0,
+    },
     status: {
       type: Number,
       require: true,

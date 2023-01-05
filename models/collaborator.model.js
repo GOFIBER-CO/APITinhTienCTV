@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { OWNER_CONFIRM } = require("../helpers");
 const { ObjectId } = mongoose.Types;
 
 const CollaboratorSchema = new mongoose.Schema(
@@ -21,52 +22,21 @@ const CollaboratorSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
-    // số lượng bài viết n từ
-    quantity500: {
+    // số lượng từ
+    number_words: {
       type: Number,
       min: 0,
       default: 0,
     },
-    quantity700: {
+    // tổng tiền (số lượng từ * số tiền mỗi từ)
+    total: {
       type: Number,
       min: 0,
       default: 0,
     },
-    quantity1000: {
+    owner_confirm: {
       type: Number,
-      min: 0,
-      default: 0,
-    },
-    // số tiền cho mỗi bài viết n từ
-    money500: {
-      type: Number,
-      min: 0,
-      default: 0,
-    },
-    money700: {
-      type: Number,
-      min: 0,
-      default: 0,
-    },
-    money1000: {
-      type: Number,
-      default: 0,
-    },
-    // tổng tiền (số bài viết n từ * số tiền mỗi bài viết n từ)
-    total500: {
-      type: Number,
-      min: 0,
-      default: 0,
-    },
-    total700: {
-      type: Number,
-      min: 0,
-      default: 0,
-    },
-    total1000: {
-      type: Number,
-      min: 0,
-      default: 0,
+      default: OWNER_CONFIRM.PENDING,
     },
     domain_id: {
       type: ObjectId,
