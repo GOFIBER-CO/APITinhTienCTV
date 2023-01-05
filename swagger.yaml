@@ -1,0 +1,2885 @@
+openapi: 3.0.0
+info:
+  title: Top nha cai
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /api/users/authenticate:
+    post:
+      summary: Authenticate user credentials and return a JWT token and a cookie with a refresh token
+      operationId: authenticate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "jason"
+                password:
+                  type: string
+                  example: "pass123"
+              required:
+                - username
+                - password
+      responses:
+        "200":
+          description: User details, a JWT access token and a refresh token cookie
+          headers:
+            Set-Cookie:
+              description: "`refreshToken`"
+              schema:
+                type: string
+                example: refreshToken=51872eca5efedcf424db4cf5afd16a9d00ad25b743a034c9c221afc85d18dcd5e4ad6e3f08607550; Path=/; Expires=Tue, 16 Jun 2020 09:14:17 GMT; HttpOnly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  firstName:
+                    type: string
+                    example: "Jason"
+                  lastName:
+                    type: string
+                    example: "Watmore"
+                  username:
+                    type: string
+                    example: "jason"
+                  role:
+                    type: string
+                    example: "Admin"
+                  jwtToken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZWIxMmUxOTdlMDZhNzZjY2RlZmMxMjEiLCJpZCI6IjVlYjEyZTE5N2UwNmE3NmNjZGVmYzEyMSIsImlhdCI6MTU4ODc1ODE1N30.xR9H0STbFOpSkuGA9jHNZOJ6eS7umHHqKRhI807YT1Y"
+        "400":
+          description: The username or password is incorrect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Username or password is incorrect"
+  /api/users/refresh-token:
+    post:
+      summary: Use a refresh token to generate a new JWT token and a new refresh token
+      description: The refresh token is sent and returned via cookies.
+      operationId: refreshToken
+      parameters:
+        - in: cookie
+          name: refreshToken
+          description: The `refreshToken` cookie
+          schema:
+            type: string
+            example: 51872eca5efedcf424db4cf5afd16a9d00ad25b743a034c9c221afc85d18dcd5e4ad6e3f08607550
+      responses:
+        "200":
+          description: User details, a JWT access token and a new refresh token cookie
+          headers:
+            Set-Cookie:
+              description: "`refreshToken`"
+              schema:
+                type: string
+                example: refreshToken=51872eca5efedcf424db4cf5afd16a9d00ad25b743a034c9c221afc85d18dcd5e4ad6e3f08607550; Path=/; Expires=Tue, 16 Jun 2020 09:14:17 GMT; HttpOnly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  firstName:
+                    type: string
+                    example: "Jason"
+                  lastName:
+                    type: string
+                    example: "Watmore"
+                  username:
+                    type: string
+                    example: "jason"
+                  role:
+                    type: string
+                    example: "Admin"
+                  jwtToken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZWIxMmUxOTdlMDZhNzZjY2RlZmMxMjEiLCJpZCI6IjVlYjEyZTE5N2UwNmE3NmNjZGVmYzEyMSIsImlhdCI6MTU4ODc1ODE1N30.xR9H0STbFOpSkuGA9jHNZOJ6eS7umHHqKRhI807YT1Y"
+        "400":
+          description: The refresh token is invalid, revoked or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid token"
+  /api/users/revoke-token:
+    post:
+      summary: Revoke a refresh token
+      description: Admin users can revoke the tokens of any user, regular users can only revoke their own tokens.
+      operationId: revokeToken
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: cookie
+          name: refreshToken
+          description: The refresh token can be sent in a cookie or the post body, if both are sent the token in the body is used.
+          schema:
+            type: string
+            example: 51872eca5efedcf424db4cf5afd16a9d00ad25b743a034c9c221afc85d18dcd5e4ad6e3f08607550
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: "51872eca5efedcf424db4cf5afd16a9d00ad25b743a034c9c221afc85d18dcd5e4ad6e3f08607550"
+      responses:
+        "200":
+          description: The refresh token was successfully revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Token revoked"
+        "400":
+          description: The refresh token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid token"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/users:
+    get:
+      summary: Get a list of all users
+      description: Restricted to admin users.
+      operationId: getAllUsers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: An array of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    firstName:
+                      type: string
+                      example: "Jason"
+                    lastName:
+                      type: string
+                      example: "Watmore"
+                    username:
+                      type: string
+                      example: "jason"
+                    role:
+                      type: string
+                      example: "Admin"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/users/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: User id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get a single user by id
+      description: Admin users can access any user record, regular users are restricted to their own user record.
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Details of the specified user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  firstName:
+                    type: string
+                    example: "Jason"
+                  lastName:
+                    type: string
+                    example: "Watmore"
+                  username:
+                    type: string
+                    example: "jason"
+                  role:
+                    type: string
+                    example: "Admin"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/users/{id}/refresh-tokens:
+    parameters:
+      - in: path
+        name: id
+        description: User id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get a list of all refresh tokens (active and revoked) of the user with the specified id
+      description: Admin users can access any user's refresh tokens, regular users are restricted to their own refresh tokens.
+      operationId: getRefreshTokens
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: An array of refresh tokens for the specified user id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      example: "79ea9a5e825da7c27d30839c89295071842f2a44b22e917aaf795126f4486509d8511c6fdedb6f1e"
+                    expires:
+                      type: string
+                      example: "2020-06-24T03:29:13.871Z"
+                    created:
+                      type: string
+                      example: "2020-06-17T03:29:13.871Z"
+                    createdByIp:
+                      type: string
+                      example: "127.0.0.1"
+                    isExpired:
+                      type: boolean
+                      example: false
+                    isActive:
+                      type: boolean
+                      example: true
+                    revoked:
+                      type: string
+                      example: "2020-06-17T03:29:13.871Z"
+                    revokedByIp:
+                      type: string
+                      example: "127.0.0.1"                    
+                    replacedByToken:
+                      type: string
+                      example: "a01d3818db64961742f249beeded65739e9c3d1019570ea48ea820d274eac607043a6cbefd23c297"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/users/delete/{id}:
+    parameters:
+        - in: path
+          name: id
+          description: Remove user id
+          required: true
+          example: "5eb12e197e06a76ccdefc121"
+          schema:
+            type: string
+    delete:
+      summary: Remove a single user by id
+      description: Admin users can access any user record, regular users are restricted to their own user record.
+      operationId: removeUser
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Delete successfuly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delete Successfuly"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  
+  /api/faqs:
+    get:
+      summary: Get a list of all faq
+      description: Get a list of all faqs .
+      operationId: faqGetAll
+      responses:
+        "200":
+          description: An array of all faqs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    faq_name:
+                      type: string
+                      example: "Jason"
+                    faq_question:
+                      type: string
+                      example: "Watmore"
+                    faq_answer:
+                      type: string
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/faqs/search:
+    parameters:
+      - in: path
+        name: query
+        description: query
+        required: true
+        example: "search"
+        schema:
+          type: string
+    get:
+      summary: Search FAQ
+      description: Search FAQ .
+      operationId: Search
+      responses:
+        "200":
+          description: Search FAQ 
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    faq_name:
+                      type: string
+                      example: "Jason"
+                    faq_question:
+                      type: string
+                      example: "Watmore"
+                    faq_answer:
+                      type: string
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/faqs/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: FAQ id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get by id of faq
+      description: Get by id of faqs .
+      operationId: FaqGetById
+      responses:
+        "200":
+          description: An 
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    faq_name:
+                      type: string
+                      example: "Jason"
+                    faq_question:
+                      type: string
+                      example: "Watmore"
+                    faq_answer:
+                      type: string
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/faqs:
+    post:
+      summary: post a FAQ
+      description: Restricted to admin users.
+      operationId: PostFAQ
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                faq_name:
+                  type: string
+                  example: "jason"
+                faq_question:
+                  type: string
+                  example: "abc"
+                faq_answer:
+                  type: string
+                  example: "abc"
+      responses:
+        "200":
+          description: An array of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    faq_name:
+                      type: string
+                      example: "jason"
+                    faq_question:
+                      type: string
+                      example: "abc"
+                    faq_answer:
+                      type: string
+                      example: "abc"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/faqs/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealer id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    PUT:
+      summary: put a FAQ
+      description: Restricted to admin users.
+      operationId: PutFAQ
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                _id:
+                  type: string
+                  example: "5eb12e197e06a76ccdefc121"
+                faq_name:
+                  type: string
+                  example: "jason"
+                faq_question:
+                  type: string
+                  example: "abc"
+                faq_answer:
+                  type: string
+                  example: "abc"
+      responses:
+        "200":
+          description: An array of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    faq_name:
+                      type: string
+                      example: "jason"
+                    faq_question:
+                      type: string
+                      example: "abc"
+                    faq_answer:
+                      type: string
+                      example: "abc"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/faqs/delete/{id}:
+    parameters:
+        - in: path
+          name: id
+          description: Remove faq id
+          required: true
+          example: "5eb12e197e06a76ccdefc121"
+          schema:
+            type: string
+    delete:
+      summary: Remove a single faq by id
+      description: Admin users can access any user record, regular users are restricted to their own user record.
+      operationId: removeFaq
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Delete successfuly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delete Successfuly"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  
+  /api/dealers:
+    get:
+      summary: Get a list of all dealers
+      description: Get a list of all dealers .
+      operationId: dealers
+      responses:
+        "200":
+          description: An array of all dealers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dealer_name:
+                      type: string
+                      example: "Jason"
+                    dealer_promotion:
+                      type: string
+                      example: "Watmore"
+                    dealer_tag_rate:
+                      type: string
+                      example: "jason"
+                    dealer_star_rate:
+                      type: string
+                      example: "jason"
+                    dealer_rating:
+                      type: string
+                      example: "jason"
+                    dealer_link:
+                      type: string
+                      example: "jason"
+                    dealer_image:
+                      type: string
+                      example: "jason"
+                    dealer_description:
+                      type: {}
+                      example: "<p>Đây là description</p>"
+                    dealer_video:
+                      type: string
+                      example: "jason"
+                    dealer_interview:
+                      type: string
+                      example: "jason"
+                    dealer_slug:
+                      type: string
+                      example: "jason"
+                    faq_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealers/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealer id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get by id dealers
+      description: Get by id dealers .
+      operationId: DealerGetById
+      responses:
+        "200":
+          description: An array of a dealers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dealer_name:
+                      type: string
+                      example: "Jason"
+                    dealer_promotion:
+                      type: string
+                      example: "Watmore"
+                    dealer_tag_rate:
+                      type: string
+                      example: "jason"
+                    dealer_star_rate:
+                      type: string
+                      example: "jason"
+                    dealer_rating:
+                      type: string
+                      example: "jason"
+                    dealer_link:
+                      type: string
+                      example: "jason"
+                    dealer_image:
+                      type: string
+                      example: "jason"
+                    dealer_description:
+                      type: string
+                      example: "jason"
+                    dealer_video:
+                      type: string
+                      example: "jason"
+                    dealer_interview:
+                      type: string
+                      example: "jason"
+                    dealer_slug:
+                      type: string
+                      example: "jason"
+                    faq_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealers/search:
+    parameters:
+      - in: path
+        name: query
+        description: dealerSearch
+        required: true
+        example: "search"
+        schema:
+          type: string
+    get:
+      summary: Get a list of all dealers
+      description: Get a list of all dealers .
+      operationId: dealerSearch
+      responses:
+        "200":
+          description: An array of all dealers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dealer_name:
+                      type: string
+                      example: "Jason"
+                    dealer_promotion:
+                      type: string
+                      example: "Watmore"
+                    dealer_tag_rate:
+                      type: string
+                      example: "jason"
+                    dealer_star_rate:
+                      type: string
+                      example: "jason"
+                    dealer_rating:
+                      type: string
+                      example: "jason"
+                    dealer_link:
+                      type: string
+                      example: "jason"
+                    dealer_image:
+                      type: string
+                      example: "jason"
+                    dealer_description:
+                      type: {}
+                      example: "<p>Đây là description</p>"
+                    dealer_video:
+                      type: string
+                      example: "jason"
+                    dealer_interview:
+                      type: string
+                      example: "jason"
+                    dealer_slug:
+                      type: string
+                      example: "jason"
+                    faq_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealers/:
+    post:
+      summary: post a Dealer
+      description: Restricted to admin users.
+      operationId: PostDealer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "5eb12e197e06a76ccdefc121"
+                dealer_name:
+                  type: string
+                  example: "Jason"
+                dealer_promotion:
+                  type: string
+                  example: "Watmore"
+                dealer_tag_rate:
+                  type: string
+                  example: "jason"
+                dealer_star_rate:
+                  type: string
+                  example: "jason"
+                dealer_rating:
+                  type: string
+                  example: "jason"
+                dealer_link:
+                  type: string
+                  example: "jason"
+                dealer_image:
+                  type: string
+                  example: "jason"
+                dealer_description:
+                  type: {}
+                  example: "<p>Đây là description</p>"
+                dealer_video:
+                  type: string
+                  example: "jason"
+                dealer_interview:
+                  type: string
+                  example: "jason"
+                dealer_slug:
+                  type: string
+                  example: "jason"
+                faq_id:
+                  type: string
+                  example: "jason,abc,xyz"
+      responses:
+        "200":
+          description: An array of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dealer_name:
+                      type: string
+                      example: "Jason"
+                    dealer_promotion:
+                      type: string
+                      example: "Watmore"
+                    dealer_tag_rate:
+                      type: string
+                      example: "jason"
+                    dealer_star_rate:
+                      type: string
+                      example: "jason"
+                    dealer_rating:
+                      type: string
+                      example: "jason"
+                    dealer_link:
+                      type: string
+                      example: "jason"
+                    dealer_image:
+                      type: string
+                      example: "jason"
+                    dealer_description:
+                      type: {}
+                      example: "<p>Đây là description</p>"
+                    dealer_video:
+                      type: string
+                      example: "jason"
+                    dealer_interview:
+                      type: string
+                      example: "jason"
+                    dealer_slug:
+                      type: string
+                      example: "jason"
+                    faq_id:
+                      type: array
+                      example: "jason"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealers/{id}:
+    put:
+      summary: put a Dealer
+      description: Restricted to admin users.
+      operationId: PutDealer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "5eb12e197e06a76ccdefc121"
+                dealer_name:
+                  type: string
+                  example: "Jason"
+                dealer_promotion:
+                  type: string
+                  example: "Watmore"
+                dealer_tag_rate:
+                  type: string
+                  example: "jason"
+                dealer_star_rate:
+                  type: string
+                  example: "jason"
+                dealer_rating:
+                  type: string
+                  example: "jason"
+                dealer_link:
+                  type: string
+                  example: "jason"
+                dealer_image:
+                  type: string
+                  example: "jason"
+                dealer_description:
+                  type: {}
+                  example: "<p>Đây là description</p>"
+                dealer_video:
+                  type: string
+                  example: "jason"
+                dealer_interview:
+                  type: string
+                  example: "jason"
+                dealer_slug:
+                  type: string
+                  example: "jason"
+                faq_id:
+                  type: string
+                  example: "jason,abc,xyz"
+      responses:
+        "200":
+          description: An array of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dealer_name:
+                      type: string
+                      example: "Jason"
+                    dealer_promotion:
+                      type: string
+                      example: "Watmore"
+                    dealer_tag_rate:
+                      type: string
+                      example: "jason"
+                    dealer_star_rate:
+                      type: string
+                      example: "jason"
+                    dealer_rating:
+                      type: string
+                      example: "jason"
+                    dealer_link:
+                      type: string
+                      example: "jason"
+                    dealer_image:
+                      type: string
+                      example: "jason"
+                    dealer_description:
+                      type: {}
+                      example: "<p>Đây là description</p>"
+                    dealer_video:
+                      type: string
+                      example: "jason"
+                    dealer_interview:
+                      type: string
+                      example: "jason"
+                    dealer_slug:
+                      type: string
+                      example: "jason"
+                    faq_id:
+                      type: array
+                      example: "jason"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealers/delete/{id}:
+    parameters:
+        - in: path
+          name: id
+          description: Remove dealer id
+          required: true
+          example: "5eb12e197e06a76ccdefc121"
+          schema:
+            type: string
+    delete:
+      summary: Remove a single dealer by id
+      description: Admin users can access any user record, regular users are restricted to their own user record.
+      operationId: removeDealer
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Delete successfuly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delete Successfuly"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  
+  /api/dealerInfor:
+    get:
+      summary: Get a list of all dealerInfor
+      description: Get a list of all dealerInfor .
+      operationId: dealerInforGet
+      responses:
+        "200":
+          description: An array of all dealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    di_name:
+                      type: string
+                      example: "Jason"
+                    di_slug:
+                      type: string
+                      example: "Watmore"
+                    di_score1:
+                      type: string
+                      example: "jason"
+                    di_score2:
+                      type: string
+                      example: "jason"
+                    di_score3:
+                      type: string
+                      example: "jason"
+                    di_score4:
+                      type: string
+                      example: "jason"
+                    di_score5:
+                      type: string
+                      example: "jason"
+                    di_reason:
+                      type: string
+                      example: "jason"
+                    di_advantages:
+                      type: string
+                      example: "jason"
+                    di_weakness:
+                      type: string
+                      example: "jason"
+                    di_eveluate:
+                      type: string
+                      example: "jason"
+                    di_website:
+                      type: string
+                      example: "jason"
+                    di_host:
+                      type: string
+                      example: "jason"
+                    di_headquarters:
+                      type: string
+                      example: "jason"
+                    di_license:
+                      type: string
+                      example: "jason"
+                    di_founded_year:
+                      type: string
+                      example: "jason"
+                    di_partner:
+                      type: string
+                      example: "jason"
+                    di_languages:
+                      type: string
+                      example: "jason"
+                    di_mobile_applications:
+                      type: string
+                      example: "jason"
+                    di_web_applications:
+                      type: string
+                      example: "jason"
+                    di_live_soccer:
+                      type: string
+                      example: "jason"
+                    di_game_system:
+                      type: string
+                      example: "jason"
+                    di_odds:
+                      type: string
+                      example: "jason"
+                    di_bets:
+                      type: string
+                      example: "jason"
+                    di_currency:
+                      type: string
+                      example: "jason"
+                    di_lowest_bet:
+                      type: string
+                      example: "jason"
+                    di_highest_bet:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerInfor/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealerInforId
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get a by dealerInfor
+      description: Get a by dealerInfor .
+      operationId: getByIdDealerInfor
+      responses:
+        "200":
+          description: An array of a dealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    di_name:
+                      type: string
+                      example: "Jason"
+                    di_slug:
+                      type: string
+                      example: "Watmore"
+                    di_score1:
+                      type: string
+                      example: "jason"
+                    di_score2:
+                      type: string
+                      example: "jason"
+                    di_score3:
+                      type: string
+                      example: "jason"
+                    di_score4:
+                      type: string
+                      example: "jason"
+                    di_score5:
+                      type: string
+                      example: "jason"
+                    di_reason:
+                      type: string
+                      example: "jason"
+                    di_advantages:
+                      type: string
+                      example: "jason"
+                    di_weakness:
+                      type: string
+                      example: "jason"
+                    di_eveluate:
+                      type: string
+                      example: "jason"
+                    di_website:
+                      type: string
+                      example: "jason"
+                    di_host:
+                      type: string
+                      example: "jason"
+                    di_headquarters:
+                      type: string
+                      example: "jason"
+                    di_license:
+                      type: string
+                      example: "jason"
+                    di_founded_year:
+                      type: string
+                      example: "jason"
+                    di_partner:
+                      type: string
+                      example: "jason"
+                    di_languages:
+                      type: string
+                      example: "jason"
+                    di_mobile_applications:
+                      type: string
+                      example: "jason"
+                    di_web_applications:
+                      type: string
+                      example: "jason"
+                    di_live_soccer:
+                      type: string
+                      example: "jason"
+                    di_game_system:
+                      type: string
+                      example: "jason"
+                    di_odds:
+                      type: string
+                      example: "jason"
+                    di_bets:
+                      type: string
+                      example: "jason"
+                    di_currency:
+                      type: string
+                      example: "jason"
+                    di_lowest_bet:
+                      type: string
+                      example: "jason"
+                    di_highest_bet:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerInfor/search:
+    parameters:
+      - in: path
+        name: id
+        description: query
+        required: true
+        example: "đây là search query"
+        schema:
+          type: string
+    get:
+      summary: Get a by dealerInfor
+      description: Get a by dealerInfor .
+      operationId: searchDealerInfor
+      responses:
+        "200":
+          description: An array of a dealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    di_name:
+                      type: string
+                      example: "Jason"
+                    di_slug:
+                      type: string
+                      example: "Watmore"
+                    di_score1:
+                      type: string
+                      example: "jason"
+                    di_score2:
+                      type: string
+                      example: "jason"
+                    di_score3:
+                      type: string
+                      example: "jason"
+                    di_score4:
+                      type: string
+                      example: "jason"
+                    di_score5:
+                      type: string
+                      example: "jason"
+                    di_reason:
+                      type: string
+                      example: "jason"
+                    di_advantages:
+                      type: string
+                      example: "jason"
+                    di_weakness:
+                      type: string
+                      example: "jason"
+                    di_eveluate:
+                      type: string
+                      example: "jason"
+                    di_website:
+                      type: string
+                      example: "jason"
+                    di_host:
+                      type: string
+                      example: "jason"
+                    di_headquarters:
+                      type: string
+                      example: "jason"
+                    di_license:
+                      type: string
+                      example: "jason"
+                    di_founded_year:
+                      type: string
+                      example: "jason"
+                    di_partner:
+                      type: string
+                      example: "jason"
+                    di_languages:
+                      type: string
+                      example: "jason"
+                    di_mobile_applications:
+                      type: string
+                      example: "jason"
+                    di_web_applications:
+                      type: string
+                      example: "jason"
+                    di_live_soccer:
+                      type: string
+                      example: "jason"
+                    di_game_system:
+                      type: string
+                      example: "jason"
+                    di_odds:
+                      type: string
+                      example: "jason"
+                    di_bets:
+                      type: string
+                      example: "jason"
+                    di_currency:
+                      type: string
+                      example: "jason"
+                    di_lowest_bet:
+                      type: string
+                      example: "jason"
+                    di_highest_bet:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerInfor:
+    post:
+      summary: post a DealerInfor
+      description: Restricted to admin users.
+      operationId: PostDealerInfor
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  di_name:
+                    type: string
+                    example: "Jason"
+                  di_slug:
+                    type: string
+                    example: "Watmore"
+                  di_score1:
+                    type: string
+                    example: "jason"
+                  di_score2:
+                    type: string
+                    example: "jason"
+                  di_score3:
+                    type: string
+                    example: "jason"
+                  di_score4:
+                    type: string
+                    example: "jason"
+                  di_score5:
+                    type: string
+                    example: "jason"
+                  di_reason:
+                    type: string
+                    example: "jason"
+                  di_advantages:
+                    type: string
+                    example: "jason"
+                  di_weakness:
+                    type: string
+                    example: "jason"
+                  di_eveluate:
+                    type: string
+                    example: "jason"
+                  di_website:
+                    type: string
+                    example: "jason"
+                  di_host:
+                    type: string
+                    example: "jason"
+                  di_headquarters:
+                    type: string
+                    example: "jason"
+                  di_license:
+                    type: string
+                    example: "jason"
+                  di_founded_year:
+                    type: string
+                    example: "jason"
+                  di_partner:
+                    type: string
+                    example: "jason"
+                  di_languages:
+                    type: string
+                    example: "jason"
+                  di_mobile_applications:
+                    type: string
+                    example: "jason"
+                  di_web_applications:
+                    type: string
+                    example: "jason"
+                  di_live_soccer:
+                    type: string
+                    example: "jason"
+                  di_game_system:
+                    type: string
+                    example: "jason"
+                  di_odds:
+                    type: string
+                    example: "jason"
+                  di_bets:
+                    type: string
+                    example: "jason"
+                  di_currency:
+                    type: string
+                    example: "jason"
+                  di_lowest_bet:
+                    type: string
+                    example: "jason"
+                  di_highest_bet:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    di_name:
+                      type: string
+                      example: "Jason"
+                    di_slug:
+                      type: string
+                      example: "Watmore"
+                    di_score1:
+                      type: string
+                      example: "jason"
+                    di_score2:
+                      type: string
+                      example: "jason"
+                    di_score3:
+                      type: string
+                      example: "jason"
+                    di_score4:
+                      type: string
+                      example: "jason"
+                    di_score5:
+                      type: string
+                      example: "jason"
+                    di_reason:
+                      type: string
+                      example: "jason"
+                    di_advantages:
+                      type: string
+                      example: "jason"
+                    di_weakness:
+                      type: string
+                      example: "jason"
+                    di_eveluate:
+                      type: string
+                      example: "jason"
+                    di_website:
+                      type: string
+                      example: "jason"
+                    di_host:
+                      type: string
+                      example: "jason"
+                    di_headquarters:
+                      type: string
+                      example: "jason"
+                    di_license:
+                      type: string
+                      example: "jason"
+                    di_founded_year:
+                      type: string
+                      example: "jason"
+                    di_partner:
+                      type: string
+                      example: "jason"
+                    di_languages:
+                      type: string
+                      example: "jason"
+                    di_mobile_applications:
+                      type: string
+                      example: "jason"
+                    di_web_applications:
+                      type: string
+                      example: "jason"
+                    di_live_soccer:
+                      type: string
+                      example: "jason"
+                    di_game_system:
+                      type: string
+                      example: "jason"
+                    di_odds:
+                      type: string
+                      example: "jason"
+                    di_bets:
+                      type: string
+                      example: "jason"
+                    di_currency:
+                      type: string
+                      example: "jason"
+                    di_lowest_bet:
+                      type: string
+                      example: "jason"
+                    di_highest_bet:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerInfor/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealer id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    put:
+      summary: post a DealerInfor
+      description: Restricted to admin users.
+      operationId: PostDealerInfor
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  di_name:
+                    type: string
+                    example: "Jason"
+                  di_slug:
+                    type: string
+                    example: "Watmore"
+                  di_score1:
+                    type: string
+                    example: "jason"
+                  di_score2:
+                    type: string
+                    example: "jason"
+                  di_score3:
+                    type: string
+                    example: "jason"
+                  di_score4:
+                    type: string
+                    example: "jason"
+                  di_score5:
+                    type: string
+                    example: "jason"
+                  di_reason:
+                    type: string
+                    example: "jason"
+                  di_advantages:
+                    type: string
+                    example: "jason"
+                  di_weakness:
+                    type: string
+                    example: "jason"
+                  di_eveluate:
+                    type: string
+                    example: "jason"
+                  di_website:
+                    type: string
+                    example: "jason"
+                  di_host:
+                    type: string
+                    example: "jason"
+                  di_headquarters:
+                    type: string
+                    example: "jason"
+                  di_license:
+                    type: string
+                    example: "jason"
+                  di_founded_year:
+                    type: string
+                    example: "jason"
+                  di_partner:
+                    type: string
+                    example: "jason"
+                  di_languages:
+                    type: string
+                    example: "jason"
+                  di_mobile_applications:
+                    type: string
+                    example: "jason"
+                  di_web_applications:
+                    type: string
+                    example: "jason"
+                  di_live_soccer:
+                    type: string
+                    example: "jason"
+                  di_game_system:
+                    type: string
+                    example: "jason"
+                  di_odds:
+                    type: string
+                    example: "jason"
+                  di_bets:
+                    type: string
+                    example: "jason"
+                  di_currency:
+                    type: string
+                    example: "jason"
+                  di_lowest_bet:
+                    type: string
+                    example: "jason"
+                  di_highest_bet:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    di_name:
+                      type: string
+                      example: "Jason"
+                    di_slug:
+                      type: string
+                      example: "Watmore"
+                    di_score1:
+                      type: string
+                      example: "jason"
+                    di_score2:
+                      type: string
+                      example: "jason"
+                    di_score3:
+                      type: string
+                      example: "jason"
+                    di_score4:
+                      type: string
+                      example: "jason"
+                    di_score5:
+                      type: string
+                      example: "jason"
+                    di_reason:
+                      type: string
+                      example: "jason"
+                    di_advantages:
+                      type: string
+                      example: "jason"
+                    di_weakness:
+                      type: string
+                      example: "jason"
+                    di_eveluate:
+                      type: string
+                      example: "jason"
+                    di_website:
+                      type: string
+                      example: "jason"
+                    di_host:
+                      type: string
+                      example: "jason"
+                    di_headquarters:
+                      type: string
+                      example: "jason"
+                    di_license:
+                      type: string
+                      example: "jason"
+                    di_founded_year:
+                      type: string
+                      example: "jason"
+                    di_partner:
+                      type: string
+                      example: "jason"
+                    di_languages:
+                      type: string
+                      example: "jason"
+                    di_mobile_applications:
+                      type: string
+                      example: "jason"
+                    di_web_applications:
+                      type: string
+                      example: "jason"
+                    di_live_soccer:
+                      type: string
+                      example: "jason"
+                    di_game_system:
+                      type: string
+                      example: "jason"
+                    di_odds:
+                      type: string
+                      example: "jason"
+                    di_bets:
+                      type: string
+                      example: "jason"
+                    di_currency:
+                      type: string
+                      example: "jason"
+                    di_lowest_bet:
+                      type: string
+                      example: "jason"
+                    di_highest_bet:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerInfor/delete/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealerInfor id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    delete:
+      summary: Get a by dealerInfor
+      description: Get a by dealerInfor .
+      operationId: DealerInforGetById
+      responses:
+        "200":
+          description: An array of a dealerInfor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delete Successfuly"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  
+  /api/dealerPayment:
+    get:
+      summary: Get a list of all dealerPayment
+      description: Get a list of all dealerPayment .
+      operationId: dealerPayGet
+      responses:
+        "200":
+          description: An array of all dealerPayment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_deposit_min:
+                      type: string
+                      example: "Jason"
+                    dp_deposit_max:
+                      type: string
+                      example: "Watmore"
+                    dp_deposit_max_day:
+                      type: string
+                      example: "jason"
+                    dp_deposit_processing_time:
+                      type: string
+                      example: "jason"
+                    dp_deposit_payments:
+                      type: string
+                      example: "jason"
+                    dp_deposit_banks:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_min:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max_day:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_prc_time:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_payments:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_banks:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPayment/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: DealerPaymentId
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get a by DealerPayment
+      description: Get a by DealerPayment .
+      operationId: DealerPaymentGetById
+      responses:
+        "200":
+          description: An array of a dealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_deposit_min:
+                      type: string
+                      example: "Jason"
+                    dp_deposit_max:
+                      type: string
+                      example: "Watmore"
+                    dp_deposit_max_day:
+                      type: string
+                      example: "jason"
+                    dp_deposit_processing_time:
+                      type: string
+                      example: "jason"
+                    dp_deposit_payments:
+                      type: string
+                      example: "jason"
+                    dp_deposit_banks:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_min:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max_day:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_prc_time:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_payments:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_banks:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPayment/search:
+    get:
+      summary: Get a list of all dealerPayment
+      description: Get a list of all dealerPayment .
+      operationId: dealerPaySearch
+      responses:
+        "200":
+          description: An array of all dealerPayment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_deposit_min:
+                      type: string
+                      example: "Jason"
+                    dp_deposit_max:
+                      type: string
+                      example: "Watmore"
+                    dp_deposit_max_day:
+                      type: string
+                      example: "jason"
+                    dp_deposit_processing_time:
+                      type: string
+                      example: "jason"
+                    dp_deposit_payments:
+                      type: string
+                      example: "jason"
+                    dp_deposit_banks:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_min:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max_day:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_prc_time:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_payments:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_banks:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPayment:
+    post:
+      summary: post a DealerPayment
+      description: Restricted to admin users.
+      operationId: PostDealerPay
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                  dp_deposit_min:
+                    type: string
+                    example: "Jason"
+                  dp_deposit_max:
+                    type: string
+                    example: "Watmore"
+                  dp_deposit_max_day:
+                    type: string
+                    example: "jason"
+                  dp_deposit_processing_time:
+                    type: string
+                    example: "jason"
+                  dp_deposit_payments:
+                    type: string
+                    example: "jason"
+                  dp_deposit_banks:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_min:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_max:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_max_day:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_prc_time:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_payments:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_banks:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_deposit_min:
+                      type: string
+                      example: "Jason"
+                    dp_deposit_max:
+                      type: string
+                      example: "Watmore"
+                    dp_deposit_max_day:
+                      type: string
+                      example: "jason"
+                    dp_deposit_processing_time:
+                      type: string
+                      example: "jason"
+                    dp_deposit_payments:
+                      type: string
+                      example: "jason"
+                    dp_deposit_banks:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_min:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max_day:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_prc_time:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_payments:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_banks:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPayment/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealer id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    "put":
+      summary: Put a DealerPayment
+      description: Restricted to admin users.
+      operationId: PutDealerPay
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  dp_deposit_min:
+                    type: string
+                    example: "Jason"
+                  dp_deposit_max:
+                    type: string
+                    example: "Watmore"
+                  dp_deposit_max_day:
+                    type: string
+                    example: "jason"
+                  dp_deposit_processing_time:
+                    type: string
+                    example: "jason"
+                  dp_deposit_payments:
+                    type: string
+                    example: "jason"
+                  dp_deposit_banks:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_min:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_max:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_max_day:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_prc_time:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_payments:
+                    type: string
+                    example: "jason"
+                  dp_withdrawal_banks:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_deposit_min:
+                      type: string
+                      example: "Jason"
+                    dp_deposit_max:
+                      type: string
+                      example: "Watmore"
+                    dp_deposit_max_day:
+                      type: string
+                      example: "jason"
+                    dp_deposit_processing_time:
+                      type: string
+                      example: "jason"
+                    dp_deposit_payments:
+                      type: string
+                      example: "jason"
+                    dp_deposit_banks:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_min:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_max_day:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_prc_time:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_payments:
+                      type: string
+                      example: "jason"
+                    dp_withdrawal_banks:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPayment/delete/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealerPayDelete id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    delete:
+      summary: Get a by dealerPayDelete
+      description: Get a by dealerPayDelete .
+      operationId: DealerPayGetById
+      responses:
+        "200":
+          description: An array of a dealerInfor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delete Successfuly"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  
+  /api/dealerPromotion:
+    get:
+      summary: Get a list of all dealerPromotion
+      description: Get a list of all dealerPromotion .
+      operationId: dealerPromotionGet
+      responses:
+        "200":
+          description: An array of all dealerPromotion
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_name:
+                      type: string
+                      example: "Jason"
+                    dp_detail:
+                      type: string
+                      example: "Watmore"
+                    dp_link:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPromotion/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealerPromotionId
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get a by DealerPromotion
+      description: Get a by DealerPromotion .
+      operationId: DealerPromotionGetById
+      responses:
+        "200":
+          description: An array of a DealerPromotion
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_name:
+                      type: string
+                      example: "Jason"
+                    dp_detail:
+                      type: string
+                      example: "Watmore"
+                    dp_link:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPromotion/search:
+    parameters:
+      - in: path
+        name: query
+        description: query
+        example: "đây là search"
+        schema:
+          type: string
+    get:
+      summary: Get a by DealerPromotion
+      description: Get a by DealerPromotion .
+      operationId: DealerPromotionSearch
+      responses:
+        "200":
+          description: An array of a DealerPromotion
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    dp_name:
+                      type: string
+                      example: "Jason"
+                    dp_detail:
+                      type: string
+                      example: "Watmore"
+                    dp_link:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPromotion/:
+    post:
+      summary: post a DealerPayment
+      description: Restricted to admin users.
+      operationId: PostDealerPay
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  dp_name:
+                    type: string
+                    example: "Jason"
+                  dp_detail:
+                    type: string
+                    example: "Watmore"
+                  dp_link:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  dp_name:
+                    type: string
+                    example: "Jason"
+                  dp_detail:
+                    type: string
+                    example: "Watmore"
+                  dp_link:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPromotion/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealer id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    put:
+      summary: post a DealerPromotion
+      description: Restricted to admin users.
+      operationId: DealerPromotionPost
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  dp_name:
+                    type: string
+                    example: "Jason"
+                  dp_detail:
+                    type: string
+                    example: "Watmore"
+                  dp_link:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: ["abc", "xayz", ]
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  dp_name:
+                    type: string
+                    example: "Jason"
+                  dp_detail:
+                    type: string
+                    example: "Watmore"
+                  dp_link:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerPromotion/remove/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealerPromotion id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    delete:
+      summary: Get a by dealerPayDelete
+      description: Get a by dealerPayDelete .
+      operationId: removeDealerPromotion
+      responses:
+        "200":
+          description: An array of a dealerInfor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delete Successfuly"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /api/dealerService:
+    get:
+      summary: Get a list of all dealerService
+      description: Get a list of all dealerService .
+      operationId: dealerServiceGet
+      responses:
+        "200":
+          description: An array of all dealerService
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    ds_zalo:
+                      type: string
+                      example: "Jason"
+                    ds_skype:
+                      type: string
+                      example: "Watmore"
+                    ds_viber:
+                      type: string
+                      example: "jason"
+                    ds_email:
+                      type: string
+                      example: "jason"
+                    ds_hotline:
+                      type: string
+                      example: "jason"
+                    ds_telegram:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerService/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: DealerServiceId
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get a by DealerService
+      description: Get a by DealerPromotion .
+      operationId: DealerServiceGetById
+      responses:
+        "200":
+          description: An array of a DealerService
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    ds_zalo:
+                      type: string
+                      example: "Jason"
+                    ds_skype:
+                      type: string
+                      example: "Watmore"
+                    ds_viber:
+                      type: string
+                      example: "jason"
+                    ds_email:
+                      type: string
+                      example: "jason"
+                    ds_hotline:
+                      type: string
+                      example: "jason"
+                    ds_telegram:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerService/search:
+    parameters:
+      - in: path
+        name: id
+        description: DealerServiceId
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    get:
+      summary: Get a by DealerService
+      description: Get a by DealerPromotion .
+      operationId: DealerServiceSearch
+      responses:
+        "200":
+          description: An array of a DealerService
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "5eb12e197e06a76ccdefc121"
+                    ds_zalo:
+                      type: string
+                      example: "Jason"
+                    ds_skype:
+                      type: string
+                      example: "Watmore"
+                    ds_viber:
+                      type: string
+                      example: "jason"
+                    ds_email:
+                      type: string
+                      example: "jason"
+                    ds_hotline:
+                      type: string
+                      example: "jason"
+                    ds_telegram:
+                      type: string
+                      example: "jason"
+                    dealer_id:
+                      type: array
+                      example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerService/:
+    post:
+      summary: post a DealerPayment
+      description: Restricted to admin users.
+      operationId: PostDealerPay
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ds_zalo:
+                    type: string
+                    example: "Jason"
+                  ds_skype:
+                    type: string
+                    example: "Watmore"
+                  ds_viber:
+                    type: string
+                    example: "jason"
+                  ds_email:
+                    type: string
+                    example: "jason"
+                  ds_hotline:
+                    type: string
+                    example: "jason"
+                  ds_telegram:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  ds_zalo:
+                    type: string
+                    example: "Jason"
+                  ds_skype:
+                    type: string
+                    example: "Watmore"
+                  ds_viber:
+                    type: string
+                    example: "jason"
+                  ds_email:
+                    type: string
+                    example: "jason"
+                  ds_hotline:
+                    type: string
+                    example: "jason"
+                  ds_telegram:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerService/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealer id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    put:
+      summary: post a DealerPayment
+      description: Restricted to admin users.
+      operationId: PostDealerPay
+      security:
+          - bearerAuth: []
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  ds_zalo:
+                    type: string
+                    example: "Jason"
+                  ds_skype:
+                    type: string
+                    example: "Watmore"
+                  ds_viber:
+                    type: string
+                    example: "jason"
+                  ds_email:
+                    type: string
+                    example: "jason"
+                  ds_hotline:
+                    type: string
+                    example: "jason"
+                  ds_telegram:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+      responses:
+        "200":
+          description: An array of all DealerInfor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                  id:
+                    type: string
+                    example: "5eb12e197e06a76ccdefc121"
+                  ds_zalo:
+                    type: string
+                    example: "Jason"
+                  ds_skype:
+                    type: string
+                    example: "Watmore"
+                  ds_viber:
+                    type: string
+                    example: "jason"
+                  ds_email:
+                    type: string
+                    example: "jason"
+                  ds_hotline:
+                    type: string
+                    example: "jason"
+                  ds_telegram:
+                    type: string
+                    example: "jason"
+                  dealer_id:
+                    type: array
+                    example: "jason"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /api/dealerService/remove/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: dealerService id
+        required: true
+        example: "5eb12e197e06a76ccdefc121"
+        schema:
+          type: string
+    delete:
+      summary: Get a by dealerServiceDelete
+      description: Get a by dealerPayDelete .
+      operationId: dealerServiceDelete
+      responses:
+        "200":
+          description: An array of a dealerInfor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSuccess:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delete Successfuly"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid, or the user does not have access to perform the action
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Unauthorized"
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Not Found"
