@@ -29,7 +29,7 @@ const create = async (data) => {
 
 const update = async ({ id, domain }) => {
   try {
-    const { name, total } = domain;
+    const { name, total, brand_id} = domain;
 
     if (!name ) {
       throw { message: "Vui lòng nhập thông tin" };

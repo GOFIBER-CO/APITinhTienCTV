@@ -1,5 +1,6 @@
 const Domain = require("../models/domain.model");
 const DomainService = require("../services/domain.service");
+const LinkManagement = require("../models/linkManagement.model")
 const { dashLogger } = require("../logger");
 const ResponseModel = require("../helpers/ResponseModel");
 
@@ -68,7 +69,7 @@ const update = async (req, res) => {
     const { id } = req.params;
     const { name } = req.body;
 
-    const checkIsFound = await LinkManagement.findById(id);
+    const checkIsFound = await Domain.findById(id);
 
     if (!checkIsFound) {
       dashLogger.error(
@@ -78,7 +79,7 @@ const update = async (req, res) => {
       return res.status(400).json({ message: `Not found ${NAME}` });
     }
 
-    const checkExist = await LinkManagement.findOne({ name });
+    const checkExist = await Domain.findOne({ name });
 
     if (checkExist && checkExist?._id?.toString() !== id)
       return res.status(400).json({ messages: `${NAME} is already exist` });
