@@ -3,6 +3,7 @@ const path = require("path");
 const process = require("process");
 const { authenticate } = require("@google-cloud/local-auth");
 const { google } = require("googleapis");
+const url = require("url");
 
 const SCOPES = ["https://www.googleapis.com/auth/documents.readonly"];
 
@@ -37,6 +38,22 @@ async function saveCredentials(client) {
  *
  */
 async function authorize() {
+  // const oauth2Client = new google.auth.OAuth2(
+  //   "534885382543-jps4050gvcci2n2rs22d5oj9s2ldk05q.apps.googleusercontent.com",
+  //   "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"
+  // );
+  // const authorizationUrl = oauth2Client.generateAuthUrl({
+  //   // 'online' (default) or 'offline' (gets refresh_token)
+  //   /** Pass in the scopes array defined above.
+  //    * Alternatively, if only one scope is needed, you can pass a scope URL as a string */
+  //   scope: SCOPES,
+  //   // Enable incremental authorization. Recommended as a best practice.
+  //   include_granted_scopes: true,
+  // });
+  // console.log(authorizationUrl)
+  // let { tokens } = await oauth2Client.getToken("dsadsadsa");
+  // console.log(tokens);
+
   let client = await loadSavedCredentialsIfExist();
   if (client) {
     return client;

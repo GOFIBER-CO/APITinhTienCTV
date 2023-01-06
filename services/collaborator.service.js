@@ -83,9 +83,85 @@ const getById = async (id) => {
   }
 };
 
+const getCollaboratorsByDomainId = async (
+  domainId,
+  pageIndex = 1,
+  pageSize = 10,
+  search = ""
+) => {
+  try {
+    
+    const data = await Collaborator.aggregate([
+      {
+        $addFields: {
+          domainId: {
+            $toString: "$domain_id",
+          },
+        },
+      },
+      {
+        $match: {
+          domainId,
+          ...(search
+            ? {
+                name: {
+                  $regex: ".*" + search + ".*",
+                },
+              }
+            : {}),
+        },
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain_id",
+          foreignField: "_id",
+          as: "domain",
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize) || 9999999,
+      },
+    ]);
+
+    const count = await Collaborator.find({
+      domain_id: domainId,
+      ...(search
+        ? {
+            name: {
+              $regex: ".*" + search + ".*",
+            },
+          }
+        : {}),
+    }).countDocuments();
+
+    let totalPages = Math.ceil(count / pageSize);
+
+    return {
+      pageIndex,
+      pageSize,
+      data,
+      count,
+      domainId,
+      totalPages,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   update,
   search,
   getById,
+  getCollaboratorsByDomainId,
 };

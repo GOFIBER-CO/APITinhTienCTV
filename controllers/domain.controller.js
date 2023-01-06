@@ -130,10 +130,26 @@ const remove = (req, res) => {
   }
 };
 
+const getAllDomainsByBrandId = async (req, res) => {
+  try {
+    const { brandId } = req.params;
+
+    const data = await DomainService.getAllDomainsByBrandId(brandId);
+
+    return res.status(200).json(data);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   search,
   create,
   remove,
   update,
   getById,
+  getAllDomainsByBrandId,
 };

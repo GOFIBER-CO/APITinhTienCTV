@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
+const { LINK_STATUS } = require("../helpers");
 
 const linkManagementSchema = new mongoose.Schema(
   {
     keyword: {
       type: String,
+      require: true,
     },
     title: {
       type: String,
@@ -28,7 +30,7 @@ const linkManagementSchema = new mongoose.Schema(
     },
     status: {
       type: Number,
-      require: true,
+      default: LINK_STATUS.PENDING,
     },
     category: {
       type: String,

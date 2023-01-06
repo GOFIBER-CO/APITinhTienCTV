@@ -11,9 +11,12 @@ const domainSchema = new mongoose.Schema(
     total: {
       type: Number,
       
+      min: 0,
+      default: 0,
     },
     brand_id: {
       type: ObjectId,
+      require: true,
       ref: "Brand",
     },
   },

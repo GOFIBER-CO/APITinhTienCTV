@@ -11,7 +11,7 @@ const create = async (data) => {
     const brand = new Brand();
 
     brand.name = name;
-    brand.total = total || 0;
+    brand.total = Number(total || 0);
 
     const newBrand = await brand.save();
 
