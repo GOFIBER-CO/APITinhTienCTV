@@ -2,16 +2,9 @@ const Collaborator = require("../models/collaborator.model");
 
 const create = async (data) => {
   try {
-    const { name, stk, account_holder, category, domain_id, bank_name } = data;
+    const { name, stk, account_holder, domain_id, bank_name, note } = data;
 
-    if (
-      !name ||
-      !stk ||
-      !account_holder ||
-      !category ||
-      !domain_id ||
-      !bank_name
-    ) {
+    if (!name || !stk || !account_holder || !domain_id || !bank_name) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
@@ -29,17 +22,10 @@ const create = async (data) => {
 
 const update = async ({ id, collaborator }) => {
   try {
-    const { name, stk, account_holder, category, domain_id, bank_name } =
-      collaborator;
+    console.log(collaborator, "asdsadasdasdasdsa");
+    const { name, stk, account_holder, note, bank_name } = collaborator;
 
-    if (
-      !name ||
-      !stk ||
-      !account_holder ||
-      !category ||
-      !domain_id ||
-      !bank_name
-    ) {
+    if (!name || !stk || !account_holder || !note || !bank_name) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
@@ -50,6 +36,7 @@ const update = async ({ id, collaborator }) => {
 
     return newCollaborator;
   } catch (error) {
+    console.log(error.message);
     throw error;
   }
 };

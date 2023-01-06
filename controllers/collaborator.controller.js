@@ -69,7 +69,10 @@ const update = async (req, res) => {
       return res.status(400).json({ message: `Not found ${NAME}` });
     }
 
-    const domain = await CollaboratorService.update({ id, domain: req.body });
+    const domain = await CollaboratorService.update({
+      id,
+      collaborator: req.body,
+    });
 
     return res.status(200).json({
       success: true,
@@ -136,7 +139,7 @@ const getAllCollaboratorsByDomainId = async (req, res) => {
 const getCollaboratorsByDomainId = async (req, res) => {
   try {
     const { domainId } = req.query;
-
+    console.log(domainId, "asdsad");
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
