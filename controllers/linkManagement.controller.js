@@ -3,7 +3,7 @@ const LinkManagementService = require("../services/linkManagement.service");
 const { dashLogger } = require("../logger");
 const ResponseModel = require("../helpers/ResponseModel");
 const googleDoc = require("../helpers/google.doc");
-
+const parseNumberOfword = require("../helpers/parseNumberOfWord");
 const NAME = "Link Management";
 
 const search = async (req, res) => {
@@ -51,7 +51,7 @@ const create = async (req, res) => {
 
     const doc = await googleDoc.printDoc(link_post);
 
-    const { title, body } = doc?.data;
+    const { title, body, inlineObjects } = doc?.data;
 
     let number_word = 0;
     let number_image = 0;

@@ -2352,7 +2352,7 @@ let example = {
   documentId: "1gcoC1LpVcBy0E6tnDQEeNdWFy_tll6Btv0nJdb-KZg4",
 };
 
-const filter = ["\n", " "];
+const filter = ["\n", " ", ""];
 function getNumberOfWord(body = example.body, image = example.inlineObjects) {
   if (!body) {
     return false;
@@ -2363,19 +2363,6 @@ function getNumberOfWord(body = example.body, image = example.inlineObjects) {
     let content = body?.content;
     content?.map((value) => {
       value?.paragraph?.elements?.map((item) => {
-        console.log(
-          item?.textRun?.content
-            ?.split(" ")
-            ?.filter(
-              (i) => i !== "\n" && i !== "" && i !== " " && i !== undefined
-            ),
-          item?.textRun?.content
-            ?.split(" ")
-            ?.filter(
-              (i) => i !== "\n" && i !== "" && i !== " " && i !== undefined
-            ).length,
-          "asdasdsad"
-        );
         wordCount =
           wordCount +
           (item?.textRun?.content
@@ -2384,7 +2371,7 @@ function getNumberOfWord(body = example.body, image = example.inlineObjects) {
       });
     });
     imageCount = Object.keys(image).length - 1;
-    console.log(wordCount, imageCount);
+    return { wordCount, imageCount };
   }
 }
 
