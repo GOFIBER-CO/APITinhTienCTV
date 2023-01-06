@@ -1,3 +1,4 @@
+const { genFieldsRequire } = require("../helpers");
 const Brand = require("../models/brand.model");
 const Collaborator = require("../models/collaborator.model");
 const Domain = require("../models/domain.model");
