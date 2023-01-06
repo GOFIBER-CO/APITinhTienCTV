@@ -37,14 +37,31 @@ const getById = async (req, res) => {
   }
 };
 
+const getAll = async (req, res) => {
+  try {
+    const brand = await BrandService.getAll();
+
+    return res.status(200).json({
+      success: true,
+      message: "Success",
+      data: brand,
+    });
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 const create = async (req, res) => {
   try {
-    const { name } = req.body;
-
+    const  {name}  = req.body;
+    console.log('name',req.body);
     const checkExist = await Brand.findOne({ name });
 
     if (checkExist)
-      return res.status(400).json({ messages: `${NAME} is already exist` });
+      return res.status(400).json({ messages: `${NAME} is already exist`, success: false });
 
     const brand = await BrandService.create(req.body);
 
@@ -135,4 +152,5 @@ module.exports = {
   remove,
   update,
   getById,
+  getAll,
 };

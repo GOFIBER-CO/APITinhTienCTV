@@ -5,14 +5,14 @@ const create = async (data) => {
   try {
     const { name, total } = data;
 
-    if (!name || !total) {
+    if (!name ) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
     const domain = new Domain();
 
     domain.name = name;
-    domain.total = total;
+    domain.total = total || 0;
 
     const newDomain = await domain.save();
 
@@ -26,7 +26,7 @@ const update = async ({ id, domain }) => {
   try {
     const { name, total } = domain;
 
-    if (!name || !total) {
+    if (!name ) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 

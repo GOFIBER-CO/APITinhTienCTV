@@ -4,14 +4,14 @@ const create = async (data) => {
   try {
     const { name, total } = data;
 
-    if (!name || !total) {
+    if (!name) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
     const brand = new Brand();
 
     brand.name = name;
-    brand.total = total;
+    brand.total = total || 0;
 
     const newBrand = await brand.save();
 
@@ -25,7 +25,7 @@ const update = async ({ id, brand }) => {
   try {
     const { name, total } = brand;
 
-    if (!name || !total) {
+    if (!name ) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
@@ -81,9 +81,22 @@ const getById = async (id) => {
   }
 };
 
+const getAll = async (id) => {
+  try {
+    const brand = await Brand.find();
+
+    if (!brand) throw { message: "Not found Brand" };
+
+    return brand;
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   update,
   search,
   getById,
+  getAll
 };

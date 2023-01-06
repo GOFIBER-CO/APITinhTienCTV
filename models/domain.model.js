@@ -10,7 +10,7 @@ const domainSchema = new mongoose.Schema(
     },
     total: {
       type: Number,
-      require: true,
+      
     },
     brand_id: {
       type: ObjectId,

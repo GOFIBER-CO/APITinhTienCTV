@@ -38,8 +38,9 @@ const getById = async (req, res) => {
 };
 
 const create = async (req, res) => {
+  // console.log(req.body,'đsss');
   try {
-    const { name } = req.body;
+    const { name } = req.body.name;
 
     const checkExist = await Domain.findOne({ name });
 
@@ -55,7 +56,7 @@ const create = async (req, res) => {
     });
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
-
+    console.log(error.message,'ddd');
     return res.status(400).json({
       message: error?.message,
     });

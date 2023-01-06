@@ -7,11 +7,13 @@ const {
   remove,
   update,
   search,
+  getAll,
 } = require("../controllers/brand.controller");
 const Role = require("../helpers/role");
 
 router.get("/brands", search);
 router.get("/brands/getById/:id", getById);
+router.get("/brands/getAll", getAll)
 router.post("/brands", create);
 router.put("/brands/:id", update);
 router.delete("/brands/remove/:id", remove);
