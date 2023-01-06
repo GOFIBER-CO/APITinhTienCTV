@@ -6,7 +6,6 @@ const USER_STATUS = {
 const LINK_STATUS = {
   POSTED: 1,
   PENDING: 2,
-  DEACTIVATED: 3,
 };
 
 const OWNER_CONFIRM = {
@@ -16,9 +15,20 @@ const OWNER_CONFIRM = {
 
 const PRICE = 60;
 
+const genFieldsRequire = (data) => {
+  let description = "";
+
+  (Object.keys(data) || []).forEach((key) => {
+    if (data[`${key}`] === undefined) description += `${key} `;
+  });
+
+  return `${description}: Required`;
+};
+
 module.exports = {
   USER_STATUS,
   LINK_STATUS,
   OWNER_CONFIRM,
   PRICE,
+  genFieldsRequire,
 };

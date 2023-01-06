@@ -1,3 +1,4 @@
+const { genFieldsRequire } = require("../helpers");
 const Brand = require("../models/brand.model");
 
 const create = async (data) => {
@@ -5,7 +6,12 @@ const create = async (data) => {
     const { name, total } = data;
 
     if (!name) {
-      throw { message: "Vui lòng nhập thông tin" };
+      throw {
+        message: "Vui lòng nhập thông tin",
+        description: genFieldsRequire({
+          name,
+        }),
+      };
     }
 
     const brand = new Brand();
@@ -23,13 +29,7 @@ const create = async (data) => {
 
 const update = async ({ id, brand }) => {
   try {
-    const { name, total } = brand;
-
-    if (!name || !total) {
-      throw { message: "Vui lòng nhập thông tin" };
-    }
-
-    const newBrand = await Brand.findByIdAndUpdate(id, brand);
+    const newBrand = await Brand.findByIdAndUpdate(id, brand, { new: true });
 
     return newBrand;
   } catch (error) {

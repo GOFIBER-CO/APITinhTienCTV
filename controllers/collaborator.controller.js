@@ -32,6 +32,7 @@ const getById = async (req, res) => {
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
     return res.status(400).json({
+      description: error?.description,
       message: error.message,
     });
   }
@@ -50,6 +51,7 @@ const create = async (req, res) => {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
 
     return res.status(400).json({
+      description: error?.description,
       message: error?.message,
     });
   }
