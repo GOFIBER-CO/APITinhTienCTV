@@ -122,10 +122,87 @@ const getAllDomainsByBrandId = async (brandId) => {
   }
 };
 
+const getDomainsByBrandId = async (
+  brandId,
+  pageIndex = 1,
+  pageSize = 10,
+  search = ""
+) => {
+  try {
+    const data = await Domain.aggregate([
+      {
+        $addFields: {
+          brandId: {
+            $toString: "$brand_id",
+          },
+        },
+      },
+      {
+        $match: {
+          brandId,
+          ...(search
+            ? {
+                name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              }
+            : {}),
+        },
+      },
+      {
+        $lookup: {
+          from: "brands",
+          localField: "brand_id",
+          foreignField: "_id",
+          as: "brand",
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize) || 9999999,
+      },
+    ]);
+
+    const count = await Domain.find({
+      brand_id: brandId,
+      ...(search
+        ? {
+            name: {
+              $regex: ".*" + search + ".*",
+              $options: "i",
+            },
+          }
+        : {}),
+    }).countDocuments();
+
+    let totalPages = Math.ceil(count / pageSize);
+
+    return {
+      pageIndex,
+      pageSize,
+      data,
+      count,
+      brandId,
+      totalPages,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   update,
   search,
   getById,
   getAllDomainsByBrandId,
+  getDomainsByBrandId,
 };

@@ -6,6 +6,7 @@ const USER_STATUS = {
 const LINK_STATUS = {
   POSTED: 1,
   PENDING: 2,
+  DEACTIVATED: 3,
 };
 
 const OWNER_CONFIRM = {

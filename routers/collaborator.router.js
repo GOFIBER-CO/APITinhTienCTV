@@ -8,6 +8,7 @@ const {
   update,
   search,
   getCollaboratorsByDomainId,
+  getAllCollaboratorsByDomainId,
 } = require("../controllers/collaborator.controller");
 const Role = require("../helpers/role");
 
@@ -16,6 +17,13 @@ router.get("/collaborators/getById/:id", getById);
 router.post("/collaborators", create);
 router.put("/collaborators/:id", update);
 router.delete("/collaborators/remove/:id", remove);
-router.get("/collaborators/getCollaboratorsByDomainId", getCollaboratorsByDomainId);
+router.get(
+  "/collaborators/getCollaboratorsByDomainId",
+  getCollaboratorsByDomainId
+);
+router.get(
+  "/collaborators/getAllCollaboratorsByDomainId/:domainId",
+  getAllCollaboratorsByDomainId
+);
 
 module.exports = router;

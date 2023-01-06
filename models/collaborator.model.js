@@ -13,6 +13,12 @@ const CollaboratorSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    // tên ngân hàng
+    bank_name: {
+      type: String,
+      require: true,
+      default: "",
+    },
     // tên chủ thẻ
     account_holder: {
       type: String,
@@ -42,6 +48,10 @@ const CollaboratorSchema = new mongoose.Schema(
       type: ObjectId,
       require: true,
       ref: "Domain",
+    },
+    note: {
+      type: String,
+      default: "",
     },
     link_management_ids: [
       {
