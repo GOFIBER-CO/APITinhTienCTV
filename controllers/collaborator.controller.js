@@ -116,6 +116,23 @@ const remove = (req, res) => {
   }
 };
 
+const getAllCollaboratorsByDomainId = async (req, res) => {
+  try {
+    const { domainId } = req.params;
+
+    const data = await CollaboratorService.getAllCollaboratorsByDomainId(
+      domainId
+    );
+
+    return res.status(200).json(data);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 const getCollaboratorsByDomainId = async (req, res) => {
   try {
     const { domainId } = req.query;
@@ -147,4 +164,5 @@ module.exports = {
   update,
   getById,
   getCollaboratorsByDomainId,
+  getAllCollaboratorsByDomainId,
 };

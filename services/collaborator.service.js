@@ -2,9 +2,16 @@ const Collaborator = require("../models/collaborator.model");
 
 const create = async (data) => {
   try {
-    const { name, stk, account_holder, category, domain_id } = data;
+    const { name, stk, account_holder, category, domain_id, bank_name } = data;
 
-    if (!name || !stk || !account_holder || !category || !domain_id) {
+    if (
+      !name ||
+      !stk ||
+      !account_holder ||
+      !category ||
+      !domain_id ||
+      !bank_name
+    ) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
@@ -22,9 +29,17 @@ const create = async (data) => {
 
 const update = async ({ id, collaborator }) => {
   try {
-    const { name, stk, account_holder, category, domain_id } = collaborator;
+    const { name, stk, account_holder, category, domain_id, bank_name } =
+      collaborator;
 
-    if (!name || !stk || !account_holder || !category || !domain_id) {
+    if (
+      !name ||
+      !stk ||
+      !account_holder ||
+      !category ||
+      !domain_id ||
+      !bank_name
+    ) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
@@ -83,6 +98,41 @@ const getById = async (id) => {
   }
 };
 
+const getAllCollaboratorsByDomainId = async (domainId) => {
+  try {
+    const result = await Collaborator.aggregate([
+      {
+        $addFields: {
+          domainId: {
+            $toString: "$domain_id",
+          },
+        },
+      },
+      {
+        $match: {
+          domainId,
+        },
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain_id",
+          foreignField: "_id",
+          as: "domain",
+        },
+      },
+    ]);
+
+    return {
+      domainId,
+      data: result || [],
+      count: result?.length || 0,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 const getCollaboratorsByDomainId = async (
   domainId,
   pageIndex = 1,
@@ -90,7 +140,6 @@ const getCollaboratorsByDomainId = async (
   search = ""
 ) => {
   try {
-    
     const data = await Collaborator.aggregate([
       {
         $addFields: {
@@ -106,6 +155,7 @@ const getCollaboratorsByDomainId = async (
             ? {
                 name: {
                   $regex: ".*" + search + ".*",
+                  $options: "i",
                 },
               }
             : {}),
@@ -138,6 +188,7 @@ const getCollaboratorsByDomainId = async (
         ? {
             name: {
               $regex: ".*" + search + ".*",
+              $options: "i",
             },
           }
         : {}),
@@ -164,4 +215,5 @@ module.exports = {
   search,
   getById,
   getCollaboratorsByDomainId,
+  getAllCollaboratorsByDomainId,
 };

@@ -242,30 +242,183 @@ const update = async (req, res) => {
   }
 };
 
-const remove = (req, res) => {
-  const { id } = req.params;
+const remove = async (req, res) => {
   try {
-    if (id) {
-      LinkManagement.findByIdAndRemove(id).exec((err, data) => {
-        if (err) {
-          dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-          return res.status(400).json({
-            message: err.message,
-          });
-        }
-        res.json({
-          success: true,
-          message: `${NAME} is deleted successfully`,
+    const { id } = req.params;
+
+    const link = await LinkManagementService.getById(id);
+
+    if (!link) {
+      dashLogger.error(
+        `Error : Not found ${NAME}, Request : ${req.originalUrl}`
+      );
+
+      return res.status(400).json({ message: `Not found ${NAME}` });
+    }
+
+    const collaborators = await Collaborator.aggregate([
+      {
+        $set: {
+          link_ids: {
+            $map: {
+              input: "$link_management_ids",
+              as: "item",
+              in: {
+                $toString: "$$item",
+              },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          link_ids: { $elemMatch: { $in: [id] } },
+        },
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain_id",
+          foreignField: "_id",
+          as: "domain",
+        },
+      },
+      {
+        $unwind: "$domain",
+      },
+      {
+        $lookup: {
+          from: "brands",
+          localField: "domain.brand_id",
+          foreignField: "_id",
+          as: "domain.brand",
+        },
+      },
+      {
+        $unwind: "$domain.brand",
+      },
+    ]);
+
+    const [collaborator] = collaborators;
+
+    if (!collaborator) {
+      return res.status(400).json({ message: "Not found Collaborator" });
+    }
+
+    const { number_words } = link;
+    const { number_words: oldNumberWord, domain, link_ids } = collaborator;
+    const { brand } = domain;
+
+    const total = number_words * PRICE;
+
+    const newCollaborator = {
+      number_words: Number(oldNumberWord) - number_words,
+      total: Number(collaborator?.total || 0) - total,
+    };
+    console.log("newCollaborator.link_management_ids", link_ids, id);
+    newCollaborator.link_management_ids = link_ids?.filter(
+      (item) => item !== id
+    );
+
+    const newDomain = {
+      total: Number(domain?.total || 0) - total,
+    };
+
+    const newBrand = {
+      total: Number(brand?.total || 0) - total,
+    };
+
+    const deleteLink = LinkManagement.findByIdAndRemove(id);
+
+    const updateCollaborator = Collaborator.updateOne(
+      {
+        _id: collaborator?._id,
+      },
+      {
+        $set: newCollaborator,
+      },
+      { upsert: true }
+    );
+
+    const updateDomain = Domain.updateOne(
+      {
+        _id: domain?._id,
+      },
+      {
+        $set: newDomain,
+      },
+      { upsert: true }
+    );
+
+    const updateBrand = Brand.updateOne(
+      {
+        _id: brand?._id,
+      },
+      {
+        $set: newBrand,
+      },
+      { upsert: true }
+    );
+
+    Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
+      .then()
+      .catch(() => {
+        dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+        return res.status(400).json({
+          message: err.message,
         });
       });
-    } else {
-      dashLogger.error(
-        `Error : 'Not found ${NAME}', Request : ${req.originalUrl}`
+
+    // if (id) {
+    //   LinkManagement.findByIdAndRemove(id).exec((err, data) => {
+    //     if (err) {
+    //       dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+    //       return res.status(400).json({
+    //         message: err.message,
+    //       });
+    //     }
+    //     res.json({
+    //       success: true,
+    //       message: `${NAME} is deleted successfully`,
+    //     });
+    //   });
+    // } else {
+    //   dashLogger.error(
+    //     `Error : 'Not found ${NAME}', Request : ${req.originalUrl}`
+    //   );
+    //   res.status(400).json({
+    //     message: `Not found ${NAME}`,
+    //   });
+    // }
+
+    return res.status(200).json({
+      success: true,
+      message: `${NAME} is deleted successfully`,
+    });
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
+const getLinkManagementsByCollaboratorId = async (req, res) => {
+  try {
+    const { collaboratorId } = req.query;
+
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
+    const data =
+      await LinkManagementService.getAllLinkManagementsByCollaboratorId(
+        collaboratorId,
+        pageIndex,
+        pageSize,
+        search
       );
-      res.status(400).json({
-        message: `Not found ${NAME}`,
-      });
-    }
+
+    return res.status(200).json(data);
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
     return res.status(400).json({
@@ -280,4 +433,5 @@ module.exports = {
   remove,
   update,
   getById,
+  getLinkManagementsByCollaboratorId,
 };

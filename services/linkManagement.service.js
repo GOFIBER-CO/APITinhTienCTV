@@ -1,4 +1,5 @@
 const { LINK_STATUS } = require("../helpers");
+const Collaborator = require("../models/collaborator.model");
 const LinkManagement = require("../models/linkManagement.model");
 
 const create = async (data) => {
@@ -90,9 +91,107 @@ const getById = async (id) => {
   }
 };
 
+const getAllLinkManagementsByCollaboratorId = async (
+  collaboratorId,
+  pageIndex = 1,
+  pageSize = 10,
+  search = ""
+) => {
+  try {
+    const result = await Collaborator.aggregate([
+      {
+        $addFields: {
+          id: {
+            $toString: "$_id",
+          },
+        },
+      },
+      {
+        $match: {
+          id: collaboratorId,
+        },
+      },
+      {
+        $set: {
+          link_management_id: {
+            $map: {
+              input: "$link_management_ids",
+              as: "item",
+              in: {
+                $toObjectId: "$$item",
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "linkmanagements",
+          localField: "link_management_id",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $match: {
+                ...(search
+                  ? {
+                      title: {
+                        $regex: ".*" + search + ".*",
+                        $options: "i",
+                      },
+                    }
+                  : {}),
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+          ],
+          as: "linkManagements",
+        },
+      },
+      {
+        $addFields: {
+          count: {
+            $size: "$linkManagements",
+          },
+        },
+      },
+      {
+        $project: {
+          data: {
+            $slice: [
+              "$linkManagements",
+              pageIndex * pageSize - pageSize,
+              pageIndex * pageSize,
+            ],
+          },
+          count: 1,
+        },
+      },
+    ]);
+
+    let count = result[0]?.count || 0;
+    let totalPages = Math.ceil(count / pageSize);
+
+    return {
+      pageIndex,
+      pageSize,
+      collaboratorId: result[0]?._id,
+      count,
+      totalPages,
+      data: result[0]?.data || [],
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   update,
   search,
   getById,
+  getAllLinkManagementsByCollaboratorId,
 };
