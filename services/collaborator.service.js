@@ -1,3 +1,4 @@
+const { genFieldsRequire } = require("../helpers");
 const Collaborator = require("../models/collaborator.model");
 
 const create = async (data) => {
@@ -5,7 +6,16 @@ const create = async (data) => {
     const { name, stk, account_holder, domain_id, bank_name, note } = data;
 
     if (!name || !stk || !account_holder || !domain_id || !bank_name) {
-      throw { message: "Vui lòng nhập thông tin" };
+      throw {
+        message: "Vui lòng nhập thông tin",
+        description: genFieldsRequire({
+          name,
+          stk,
+          account_holder,
+          domain_id,
+          bank_name,
+        }),
+      };
     }
 
     const collaborator = new Collaborator({
@@ -22,7 +32,6 @@ const create = async (data) => {
 
 const update = async ({ id, collaborator }) => {
   try {
-    console.log(collaborator, "asdsadasdasdasdsa");
     const { name, stk, account_holder, note, bank_name } = collaborator;
 
     if (!name || !stk || !account_holder || !note || !bank_name) {
@@ -31,7 +40,10 @@ const update = async ({ id, collaborator }) => {
 
     const newCollaborator = await Collaborator.findByIdAndUpdate(
       id,
-      collaborator
+      collaborator,
+      {
+        new: true,
+      }
     );
 
     return newCollaborator;
