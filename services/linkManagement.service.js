@@ -1,10 +1,11 @@
+const { LINK_STATUS } = require("../helpers");
 const LinkManagement = require("../models/linkManagement.model");
 
 const create = async (data) => {
   try {
-    const { title, link_post, number_words, category, status } = data;
+    const { link_post, number_words, category, status, keyword } = data;
 
-    if (!title || !link_post || !number_words || !category || !status) {
+    if (!link_post || !category || !keyword) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
@@ -12,11 +13,11 @@ const create = async (data) => {
       ...data,
     });
 
-    linkManagement.title = title;
+    linkManagement.keyword = keyword;
     linkManagement.link_post = link_post;
     linkManagement.number_words = number_words;
     linkManagement.category = category;
-    linkManagement.status = status;
+    linkManagement.status = Number(status || LINK_STATUS.PENDING);
 
     const newLinkManagement = await linkManagement.save();
 

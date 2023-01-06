@@ -13,8 +13,11 @@ const OWNER_CONFIRM = {
   PENDING: 2,
 };
 
+const PRICE = 60;
+
 module.exports = {
   USER_STATUS,
   LINK_STATUS,
   OWNER_CONFIRM,
+  PRICE,
 };

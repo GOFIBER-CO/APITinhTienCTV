@@ -4,14 +4,14 @@ const create = async (data) => {
   try {
     const { name, total } = data;
 
-    if (!name || !total) {
+    if (!name) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
     const brand = new Brand();
 
     brand.name = name;
-    brand.total = total;
+    brand.total = Number(total || 0);
 
     const newBrand = await brand.save();
 

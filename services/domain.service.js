@@ -1,18 +1,23 @@
+const Brand = require("../models/brand.model");
 const Collaborator = require("../models/collaborator.model");
 const Domain = require("../models/domain.model");
+const BrandService = require("../services/brand.service");
 
 const create = async (data) => {
   try {
-    const { name, total } = data;
+    const { name, total, brand_id } = data;
 
-    if (!name || !total) {
+    if (!name || !brand_id) {
       throw { message: "Vui lòng nhập thông tin" };
     }
+
+    const brand = await BrandService.getById(brand_id);
 
     const domain = new Domain();
 
     domain.name = name;
-    domain.total = total;
+    domain.total = Number(total || 0);
+    domain.brand_id = brand._id;
 
     const newDomain = await domain.save();
 
@@ -82,22 +87,37 @@ const getById = async (id) => {
   }
 };
 
-const getDomainsWithCalculate = async () => {
+const getAllDomainsByBrandId = async (brandId) => {
   try {
     const result = await Domain.aggregate([
       {
+        $addFields: {
+          brandId: {
+            $toString: "$brand_id",
+          },
+        },
+      },
+      {
+        $match: {
+          brandId,
+        },
+      },
+      {
         $lookup: {
-          from: "collaborators",
-          localField: "_id",
-          foreignField: "domain_id",
-          as: "child",
+          from: "brands",
+          localField: "brand_id",
+          foreignField: "_id",
+          as: "brand",
         },
       },
     ]);
 
-    return result;
+    return {
+      brandId,
+      data: result || [],
+      count: result?.length || 0,
+    };
   } catch (error) {
-    console.log("dsad", error);
     throw error;
   }
 };
@@ -107,5 +127,5 @@ module.exports = {
   update,
   search,
   getById,
-  getDomainsWithCalculate,
+  getAllDomainsByBrandId,
 };

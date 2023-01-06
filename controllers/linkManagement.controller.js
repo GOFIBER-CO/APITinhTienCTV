@@ -3,7 +3,13 @@ const LinkManagementService = require("../services/linkManagement.service");
 const { dashLogger } = require("../logger");
 const ResponseModel = require("../helpers/ResponseModel");
 const googleDoc = require("../helpers/google.doc");
-const parseNumberOfword = require("../helpers/parseNumberOfWord");
+const parseNumberOfWord = require("../helpers/parseNumberOfWord");
+const CollaboratorService = require("../services/collaborator.service");
+const DomainService = require("../services/domain.service");
+const Collaborator = require("../models/collaborator.model");
+const { PRICE, LINK_STATUS } = require("../helpers");
+const Domain = require("../models/domain.model");
+const Brand = require("../models/brand.model");
 const NAME = "Link Management";
 
 const search = async (req, res) => {
@@ -44,24 +50,150 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { link_post } = req.body;
+    const { link_post, keyword, status, category, collaboratorId } = req.body;
+
+    const collaborators = await Collaborator.aggregate([
+      {
+        $addFields: {
+          collaboratorId: {
+            $toString: "$_id",
+          },
+        },
+      },
+      {
+        $match: {
+          collaboratorId,
+        },
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain_id",
+          foreignField: "_id",
+          as: "domain",
+        },
+      },
+      {
+        $unwind: "$domain",
+      },
+      {
+        $lookup: {
+          from: "brands",
+          localField: "domain.brand_id",
+          foreignField: "_id",
+          as: "domain.brand",
+        },
+      },
+      {
+        $unwind: "$domain.brand",
+      },
+    ]);
+
+    const [collaborator] = collaborators;
+
+    if (!collaborator) {
+      return res.status(400).json({ message: "Not found Collaborator" });
+    }
+
+    if (!keyword || !link_post || !category) {
+      return res.status(400).json({ message: "Vui lòng nhập thông tin" });
+    }
 
     if (!link_post)
       return res.status(400).json({ messages: `Link post not exist` });
 
-    const doc = await googleDoc.printDoc(link_post);
+    const link_id = link_post.substring(
+      link_post.lastIndexOf("/d/") + 3,
+      link_post.indexOf("/edit")
+    );
+
+    const doc = await googleDoc.printDoc(link_id);
 
     const { title, body, inlineObjects } = doc?.data;
 
-    let number_word = 0;
-    let number_image = 0;
+    const { number_image, number_word } = parseNumberOfWord(
+      body,
+      inlineObjects
+    );
 
-    // const linkManagement = await LinkManagementService.create(req.body);
+    const data = {
+      ...req.body,
+      status: Number(status || LINK_STATUS.PENDING),
+      number_images: number_image,
+      number_words: number_word,
+      title,
+    };
+
+    const linkManagement = await LinkManagementService.create(data);
+
+    const {
+      number_words: oldNumberWord,
+      domain,
+      link_management_ids,
+    } = collaborator;
+    const { brand } = domain;
+
+    const newTotal = number_word * PRICE;
+
+    const newCollaborator = {
+      number_words: Number(oldNumberWord) + number_word,
+      total: Number(collaborator?.total || 0) + newTotal,
+    };
+
+    if (linkManagement?._id)
+      newCollaborator.link_management_ids = [
+        ...(link_management_ids || []),
+        linkManagement?._id,
+      ];
+
+    const newDomain = {
+      total: Number(domain?.total || 0) + newTotal,
+    };
+
+    const newBrand = {
+      total: Number(brand?.total || 0) + newTotal,
+    };
+
+    const updateCollaborator = Collaborator.updateOne(
+      {
+        _id: collaborator?._id,
+      },
+      {
+        $set: newCollaborator,
+      },
+      { upsert: true }
+    );
+
+    const updateDomain = Domain.updateOne(
+      {
+        _id: domain?._id,
+      },
+      {
+        $set: newDomain,
+      },
+      { upsert: true }
+    );
+
+    const updateBrand = Brand.updateOne(
+      {
+        _id: brand?._id,
+      },
+      {
+        $set: newBrand,
+      },
+      { upsert: true }
+    );
+
+    Promise.all([updateCollaborator, updateDomain, updateBrand])
+      .then()
+      .catch(() => {
+        return res.status(400).json({ messages: `Error` });
+      });
 
     return res.status(200).json({
       success: true,
       message: "Success",
-      data: result?.data,
+      data,
     });
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);

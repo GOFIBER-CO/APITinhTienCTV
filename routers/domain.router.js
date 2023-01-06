@@ -7,6 +7,7 @@ const {
   remove,
   update,
   search,
+  getAllDomainsByBrandId,
 } = require("../controllers/domain.controller");
 const Role = require("../helpers/role");
 
@@ -15,5 +16,6 @@ router.get("/domains/getById/:id", getById);
 router.post("/domains", create);
 router.put("/domains/:id", update);
 router.delete("/domains/remove/:id", remove);
+router.get("/domains/getAllDomainsByBrandId/:brandId", getAllDomainsByBrandId);
 
 module.exports = router;

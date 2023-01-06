@@ -9,7 +9,8 @@ const brandSchema = new mongoose.Schema(
     },
     total: {
       type: Number,
-      require: true,
+      min: 0,
+      default: 0,
     },
   },
   { timestamps: true }

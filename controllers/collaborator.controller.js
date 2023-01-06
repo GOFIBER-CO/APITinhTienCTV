@@ -116,10 +116,35 @@ const remove = (req, res) => {
   }
 };
 
+const getCollaboratorsByDomainId = async (req, res) => {
+  try {
+    const { domainId } = req.query;
+
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
+
+    const data = await CollaboratorService.getCollaboratorsByDomainId(
+      domainId,
+      pageIndex,
+      pageSize,
+      search
+    );
+
+    return res.status(200).json(data);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   search,
   create,
   remove,
   update,
   getById,
+  getCollaboratorsByDomainId,
 };
