@@ -55,10 +55,38 @@ const update = async ({ id, collaborator }) => {
 
 const search = async (pageSize = 10, pageIndex = 1, search = "") => {
   try {
-    let searchObj = {};
-    if (search) {
-      searchObj.name = { $regex: ".*" + search + ".*" };
-    }
+    let searchObj = {
+      ...(search
+        ? {
+            $or: [
+              {
+                name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              },
+              {
+                bank_name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              },
+              {
+                stk: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              },
+              {
+                account_holder: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              },
+            ],
+          }
+        : {}),
+    };
 
     let data = await Collaborator.find(searchObj)
       .skip(pageSize * pageIndex - pageSize)
@@ -152,10 +180,32 @@ const getCollaboratorsByDomainId = async (
           domainId,
           ...(search
             ? {
-                name: {
-                  $regex: ".*" + search + ".*",
-                  $options: "i",
-                },
+                $or: [
+                  {
+                    name: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    bank_name: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    stk: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    account_holder: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                ],
               }
             : {}),
         },

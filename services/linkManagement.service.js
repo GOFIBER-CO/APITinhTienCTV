@@ -46,10 +46,26 @@ const update = async ({ id, linkManagement }) => {
 
 const search = async (pageSize = 10, pageIndex = 1, search = "") => {
   try {
-    let searchObj = {};
-    if (search) {
-      searchObj.name = { $regex: ".*" + search + ".*" };
-    }
+    let searchObj = {
+      ...(search
+        ? {
+            $or: [
+              {
+                title: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              },
+              {
+                keyword: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              },
+            ],
+          }
+        : {}),
+    };
 
     let data = await LinkManagement.find(searchObj)
       .skip(pageSize * pageIndex - pageSize)
@@ -131,10 +147,20 @@ const getAllLinkManagementsByCollaboratorId = async (
               $match: {
                 ...(search
                   ? {
-                      title: {
-                        $regex: ".*" + search + ".*",
-                        $options: "i",
-                      },
+                      $or: [
+                        {
+                          title: {
+                            $regex: ".*" + search + ".*",
+                            $options: "i",
+                          },
+                        },
+                        {
+                          keyword: {
+                            $regex: ".*" + search + ".*",
+                            $options: "i",
+                          },
+                        },
+                      ],
                     }
                   : {}),
               },
