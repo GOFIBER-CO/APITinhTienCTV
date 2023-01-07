@@ -7,7 +7,7 @@ const parseNumberOfWord = require("../helpers/parseNumberOfWord");
 const CollaboratorService = require("../services/collaborator.service");
 const DomainService = require("../services/domain.service");
 const Collaborator = require("../models/collaborator.model");
-const { PRICE, LINK_STATUS } = require("../helpers");
+const { PRICE, LINK_STATUS, genFieldsRequire } = require("../helpers");
 const Domain = require("../models/domain.model");
 const Brand = require("../models/brand.model");
 const NAME = "Link Management";
@@ -96,7 +96,14 @@ const create = async (req, res) => {
     }
 
     if (!keyword || !link_post || !category) {
-      return res.status(400).json({ message: "Vui lòng nhập thông tin" });
+      return res.status(400).json({
+        message: "Vui lòng nhập thông tin",
+        description: genFieldsRequire({
+          keyword,
+          link_post,
+          category,
+        }),
+      });
     }
 
     if (!link_post)
@@ -219,11 +226,6 @@ const update = async (req, res) => {
       return res.status(400).json({ message: `Not found ${NAME}` });
     }
 
-    const checkExist = await LinkManagement.findOne({ title });
-
-    if (checkExist && checkExist?._id?.toString() !== id)
-      return res.status(400).json({ messages: `${NAME} is already exist` });
-
     const linkManagement = await LinkManagementService.update({
       id,
       linkManagement: req.body,
@@ -315,7 +317,7 @@ const remove = async (req, res) => {
       number_words: Number(oldNumberWord) - number_words,
       total: Number(collaborator?.total || 0) - total,
     };
-    console.log("newCollaborator.link_management_ids", link_ids, id);
+
     newCollaborator.link_management_ids = link_ids?.filter(
       (item) => item !== id
     );

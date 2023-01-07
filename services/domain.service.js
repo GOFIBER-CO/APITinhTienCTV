@@ -1,3 +1,4 @@
+const { genFieldsRequire } = require("../helpers");
 const Brand = require("../models/brand.model");
 const Collaborator = require("../models/collaborator.model");
 const Domain = require("../models/domain.model");
@@ -7,8 +8,16 @@ const create = async (data) => {
   try {
     const { name, total, brand_id } = data;
 
-    if (!name ) {
-      throw { message: "Vui lòng nhập thông tin" };
+    // if (!name ) {
+    //   throw { message: "Vui lòng nhập thông tin" };
+    if (!name || !brand_id) {
+      throw {
+        message: "Vui lòng nhập thông tin",
+        description: genFieldsRequire({
+          name,
+          brand_id,
+        }),
+      };
     }
 
     const brand = await BrandService.getById(brand_id);
@@ -35,7 +44,8 @@ const update = async ({ id, domain }) => {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
-    const newDomain = await Domain.findByIdAndUpdate(id, domain);
+    // const newDomain = await Domain.findByIdAndUpdate(id, domain);?
+    const newDomain = await Domain.findByIdAndUpdate(id, domain, { new: true });
 
     return newDomain;
   } catch (error) {

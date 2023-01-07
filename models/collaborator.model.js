@@ -26,7 +26,6 @@ const CollaboratorSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      require: true,
     },
     // số lượng từ
     number_words: {
@@ -43,6 +42,7 @@ const CollaboratorSchema = new mongoose.Schema(
     owner_confirm: {
       type: Number,
       default: OWNER_CONFIRM.PENDING,
+      enum: [1, 2],
     },
     domain_id: {
       type: ObjectId,

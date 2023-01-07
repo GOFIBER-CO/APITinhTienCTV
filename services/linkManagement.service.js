@@ -6,9 +6,9 @@ const create = async (data) => {
   try {
     const { link_post, number_words, category, status, keyword } = data;
 
-    if (!link_post || !category || !keyword) {
-      throw { message: "Vui lòng nhập thông tin" };
-    }
+    // if (!link_post || !category || !keyword) {
+    //   throw { message: "Vui lòng nhập thông tin" };
+    // }
 
     const linkManagement = new LinkManagement({
       ...data,
@@ -30,15 +30,12 @@ const create = async (data) => {
 
 const update = async ({ id, linkManagement }) => {
   try {
-    const { title, link_post, number_words, category, status } = linkManagement;
-
-    if (!title || !link_post || !number_words || !category || !status) {
-      throw { message: "Vui lòng nhập thông tin" };
-    }
-
     const newLinkManagement = await LinkManagement.findByIdAndUpdate(
       id,
-      linkManagement
+      linkManagement,
+      {
+        new: true,
+      }
     );
 
     return newLinkManagement;
