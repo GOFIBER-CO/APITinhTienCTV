@@ -115,7 +115,6 @@ const create = async (req, res) => {
     );
 
     const doc = await googleDoc.printDoc(link_id);
-
     const { title, body, inlineObjects } = doc?.data;
 
     const { number_image, number_word } = parseNumberOfWord(
@@ -362,14 +361,14 @@ const remove = async (req, res) => {
       { upsert: true }
     );
 
-    // Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
-    //   .then()
-    //   .catch((err) => {
-    //     dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-    //     return res.status(400).json({
-    //       message: err.message,
-    //     });
-    //   });
+    Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
+      .then()
+      .catch((err) => {
+        dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+        return res.status(400).json({
+          message: err.message,
+        });
+      });
 
     // if (id) {
     //   LinkManagement.findByIdAndRemove(id).exec((err, data) => {
