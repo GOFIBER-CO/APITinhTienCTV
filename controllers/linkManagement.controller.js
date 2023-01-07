@@ -129,6 +129,7 @@ const create = async (req, res) => {
       number_images: number_image,
       number_words: number_word,
       title,
+      total: number_image * PRICE
     };
 
     const linkManagement = await LinkManagementService.create(data);
@@ -362,14 +363,14 @@ const remove = async (req, res) => {
       { upsert: true }
     );
 
-    // Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
-    //   .then()
-    //   .catch((err) => {
-    //     dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-    //     return res.status(400).json({
-    //       message: err.message,
-    //     });
-    //   });
+    Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
+      .then()
+      .catch((err) => {
+        dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+        return res.status(400).json({
+          message: err.message,
+        });
+      });
 
     // if (id) {
     //   LinkManagement.findByIdAndRemove(id).exec((err, data) => {
