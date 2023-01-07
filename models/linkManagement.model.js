@@ -28,6 +28,11 @@ const linkManagementSchema = new mongoose.Schema(
       require: true,
       min: 0,
     },
+    total: {
+      type: Number,
+      require: true,
+      min: 0,
+    },
     status: {
       type: Number,
       default: LINK_STATUS.PENDING,

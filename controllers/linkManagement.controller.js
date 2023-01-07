@@ -128,6 +128,7 @@ const create = async (req, res) => {
       number_images: number_image,
       number_words: number_word,
       title,
+      total: number_image * PRICE
     };
 
     const linkManagement = await LinkManagementService.create(data);
