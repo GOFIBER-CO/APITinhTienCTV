@@ -169,6 +169,22 @@ const getDomainsByBrandId = async (req, res) => {
     });
   }
 };
+const getAll = async (req, res) => {
+  try {
+    const domain = await DomainService.getAll();
+
+    return res.status(200).json({
+      success: true,
+      message: "Success",
+      data: domain,
+    });
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
 
 module.exports = {
   search,
@@ -178,4 +194,5 @@ module.exports = {
   getById,
   getAllDomainsByBrandId,
   getDomainsByBrandId,
+  getAll,
 };

@@ -208,6 +208,18 @@ const getDomainsByBrandId = async (
   }
 };
 
+const getAll = async () => {
+  try {
+    const domain = await Domain.find();
+
+    if (!domain) throw { message: "Not found domain" };
+
+    return domain;
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   update,
@@ -215,4 +227,5 @@ module.exports = {
   getById,
   getAllDomainsByBrandId,
   getDomainsByBrandId,
+  getAll
 };

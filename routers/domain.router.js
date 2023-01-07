@@ -9,10 +9,12 @@ const {
   search,
   getAllDomainsByBrandId,
   getDomainsByBrandId,
+  getAll
 } = require("../controllers/domain.controller");
 const Role = require("../helpers/role");
 
 router.get("/domains", search);
+router.get("/domains/getAll", getAll);
 router.get("/domains/getById/:id", getById);
 router.post("/domains", create);
 router.put("/domains/:id", update);
