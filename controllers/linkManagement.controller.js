@@ -362,14 +362,14 @@ const remove = async (req, res) => {
       { upsert: true }
     );
 
-    Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
-      .then()
-      .catch(() => {
-        dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-        return res.status(400).json({
-          message: err.message,
-        });
-      });
+    // Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
+    //   .then()
+    //   .catch((err) => {
+    //     dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+    //     return res.status(400).json({
+    //       message: err.message,
+    //     });
+    //   });
 
     // if (id) {
     //   LinkManagement.findByIdAndRemove(id).exec((err, data) => {
@@ -396,6 +396,7 @@ const remove = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: `${NAME} is deleted successfully`,
+      collaborators,
     });
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);

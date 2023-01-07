@@ -40,12 +40,12 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const domain = await CollaboratorService.create(req.body);
+    const collaborator = await CollaboratorService.create(req.body);
 
     return res.status(200).json({
       success: true,
       message: "Success",
-      data: domain,
+      data: collaborator,
     });
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
@@ -71,7 +71,7 @@ const update = async (req, res) => {
       return res.status(400).json({ message: `Not found ${NAME}` });
     }
 
-    const domain = await CollaboratorService.update({
+    const collaborator = await CollaboratorService.update({
       id,
       collaborator: req.body,
     });
@@ -79,7 +79,7 @@ const update = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Success",
-      data: domain,
+      data: collaborator,
     });
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
@@ -141,7 +141,7 @@ const getAllCollaboratorsByDomainId = async (req, res) => {
 const getCollaboratorsByDomainId = async (req, res) => {
   try {
     const { domainId } = req.query;
-    console.log(domainId, "asdsad");
+    
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";

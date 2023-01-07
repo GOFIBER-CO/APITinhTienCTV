@@ -32,11 +32,11 @@ const create = async (data) => {
 
 const update = async ({ id, collaborator }) => {
   try {
-    const { name, stk, account_holder, note, bank_name } = collaborator;
+    // const { name, stk, account_holder, note, bank_name } = collaborator;
 
-    if (!name || !stk || !account_holder || !note || !bank_name) {
-      throw { message: "Vui lòng nhập thông tin" };
-    }
+    // if (!name || !stk || !account_holder || !note || !bank_name) {
+    //   throw { message: "Vui lòng nhập thông tin" };
+    // }
 
     const newCollaborator = await Collaborator.findByIdAndUpdate(
       id,
