@@ -143,19 +143,19 @@ async function removeUser(id) {
 }
 
 async function authenticate({ username, password, ipAddress }) {
-  const user = await User.findOne({ username }).populate("role");
+  const user = await User.findOne({ username });
 
   if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
-    return { 
+    return {
       status: 0,
-      message: "Username or password is incorrect"
+      message: "Username or password is incorrect",
     };
   }
 
   // authentication successful so generate jwt and refresh tokens
   const jwtToken = generateJwtToken(user);
   const refreshToken = generateRefreshToken(user, ipAddress);
-
+  console.log(refreshToken, "asdsadsadsadasdsadasdsa");
   // save refresh token
   await refreshToken.save();
 

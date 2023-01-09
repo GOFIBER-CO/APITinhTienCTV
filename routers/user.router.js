@@ -500,7 +500,7 @@ router.post("/users/revoke-token", authorize(), revokeTokenSchema, revokeToken);
  */
 router.put(
   "/users/:id",
-  authorize(permissionFunction.USER, permissionFieldName.EDIT),
+  // authorize(permissionFunction.USER, permissionFieldName.EDIT),
   editUser
 );
 router.put(
