@@ -9,6 +9,7 @@ const {
   search,
   getCollaboratorsByDomainId,
   getAllCollaboratorsByDomainId,
+  getCollaboratorsByBrand,
 } = require("../controllers/collaborator.controller");
 const Role = require("../helpers/role");
 
@@ -25,5 +26,6 @@ router.get(
   "/collaborators/getAllCollaboratorsByDomainId/:domainId",
   getAllCollaboratorsByDomainId
 );
+router.get("/collaborators/getCollaboratorsByBrand", getCollaboratorsByBrand);
 
 module.exports = router;

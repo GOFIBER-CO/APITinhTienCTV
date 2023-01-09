@@ -1,4 +1,5 @@
 const { genFieldsRequire } = require("../helpers");
+const Brand = require("../models/brand.model");
 const Collaborator = require("../models/collaborator.model");
 
 const create = async (data) => {
@@ -258,6 +259,51 @@ const getCollaboratorsByDomainId = async (
   }
 };
 
+const getCollaboratorsByBrand = async (brandId) => {
+  try {
+    const result = await Brand.aggregate([
+      {
+        $addFields: {
+          id: {
+            $toString: "$_id",
+          },
+        },
+      },
+      {
+        $match: {
+          ...(brandId ? { id: brandId } : {}),
+        },
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "_id",
+          foreignField: "brand_id",
+          pipeline: [
+            {
+              $lookup: {
+                from: "collaborators",
+                localField: "_id",
+                foreignField: "domain_id",
+                as: "collaborators",
+              },
+            },
+          ],
+          as: "domains",
+        },
+      },
+    ]);
+
+    return {
+      brandId,
+      count: result?.length || 0,
+      data: result || [],
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   update,
@@ -265,4 +311,5 @@ module.exports = {
   getById,
   getCollaboratorsByDomainId,
   getAllCollaboratorsByDomainId,
+  getCollaboratorsByBrand,
 };
