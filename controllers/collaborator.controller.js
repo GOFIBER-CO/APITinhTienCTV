@@ -165,8 +165,16 @@ const getCollaboratorsByDomainId = async (req, res) => {
 const getCollaboratorsByBrand = async (req, res) => {
   try {
     const { brandId } = req.query;
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
 
-    const data = await CollaboratorService.getCollaboratorsByBrand(brandId);
+    const data = await CollaboratorService.getCollaboratorsByBrand(
+      brandId,
+      pageIndex,
+      pageSize,
+      search
+    );
     return res.status(200).json(data);
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);

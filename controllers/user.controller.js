@@ -121,8 +121,8 @@ function authenticate(req, res, next) {
 
       const data = {
         status,
-        data: status === 1 ? user : message
-      }
+        data: status === 1 ? user : message,
+      };
 
       res.json(data);
     })
@@ -195,8 +195,9 @@ function getById(req, res, next) {
 }
 
 function getRefreshTokens(req, res, next) {
+  console.log(req.user.role, "aaaaa");
   // users can get their own refresh tokens and admins can get any user's refresh tokens
-  if (req.params.id !== req.user.id && req.user.role.name !== Role.Admin) {
+  if (req.params.id !== req.user.id && req.user.role !== Role.Admin) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 

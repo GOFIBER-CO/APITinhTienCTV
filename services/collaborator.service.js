@@ -259,9 +259,14 @@ const getCollaboratorsByDomainId = async (
   }
 };
 
-const getCollaboratorsByBrand = async (brandId) => {
+const getCollaboratorsByBrand = async (
+  brandId,
+  pageIndex,
+  pageSize,
+  search
+) => {
   try {
-    const result = await Brand.aggregate([
+    const data = await Brand.aggregate([
       {
         $addFields: {
           id: {
@@ -272,6 +277,14 @@ const getCollaboratorsByBrand = async (brandId) => {
       {
         $match: {
           ...(brandId ? { id: brandId } : {}),
+          ...(search
+            ? {
+                name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              }
+            : {}),
         },
       },
       {
@@ -292,12 +305,29 @@ const getCollaboratorsByBrand = async (brandId) => {
           as: "domains",
         },
       },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize),
+      },
     ]);
+
+    const count = data?.length || 0;
+    let totalPages = Math.ceil(count / pageSize);
 
     return {
       brandId,
-      count: result?.length || 0,
-      data: result || [],
+      count: data?.length || 0,
+      pageIndex,
+      pageSize,
+      totalPages,
+      data,
     };
   } catch (error) {
     throw error;
