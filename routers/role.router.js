@@ -6,7 +6,7 @@ const {getAllRole, editRolePermission, addNewRole, deleteRole, editRole} = requi
 const permissionFieldName = require('../helpers/permissionFieldName.js')
 const permissionFunction = require('../helpers/permissionFunction.js')
 
-router.get('/roles/getRoles', authorize(),getAllRole)
+router.get('/roles/getRoles',getAllRole)
 router.patch('/roles/editRolePermission', authorize(permissionFunction.USER,permissionFieldName.EDIT), editRolePermission)
 router.post('/roles/addNewRole', authorize(permissionFunction.USER,permissionFieldName.ADD), addNewRole)
 router.post('/roles/deleteRole', authorize(permissionFunction.USER, permissionFieldName.DELETE), deleteRole)

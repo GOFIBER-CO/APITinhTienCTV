@@ -36,22 +36,25 @@ function isValidId(id) {
 
 async function createUser({
   username,
-  password,
+  passwordHash,
   firstName,
   lastName,
   role,
-  domains,
+  status,
+  
 }) {
   const userQuery = await User.findOne({ username });
-  const roleQuery = await Role.findOne({ role });
+  const roleQuery = await Role.findById(role);
   if (!userQuery && roleQuery) {
     let user = new User({
       firstName: firstName,
       lastName: lastName,
       username: username,
-      passwordHash: bcrypt.hashSync(password, 10),
-      domains: domains,
-      role: role,
+      passwordHash: bcrypt.hashSync(passwordHash, 10),
+      status: status,
+      role: roleQuery?.name,
+      // avatar:avatar,
+      
     });
     await user.save();
     return user;
@@ -59,15 +62,18 @@ async function createUser({
     return null;
   }
 }
-async function editUser({ id, username, password, firstName, lastName, role }) {
-  const roleQuery = await Role.findOne({ role });
+async function editUser({ id, username, password, firstName, lastName, role, status }) {
+  const roleQuery = await Role.findById( role );
   var userQuery = await getById(id);
-  if (roleQuery && userQuery) {
+  // console.log(userQuery,'userQuery');
+  // if (roleQuery && userQuery) {
     var update = {
       username: username,
       firstName: firstName,
       lastName: lastName,
-      role: role,
+      role: roleQuery.name,
+      status: status,
+      
       passwordHash:
         password && password.length
           ? bcrypt.hashSync(password, 10)
@@ -79,9 +85,9 @@ async function editUser({ id, username, password, firstName, lastName, role }) {
     } catch (error) {
       return error.message;
     }
-  } else {
-    return null;
-  }
+  // } else {
+  //   return null;
+  // }
 }
 
 async function editProfile(username, firstname, lastname, id) {
@@ -226,8 +232,9 @@ async function getByName(username) {
 
 async function getById(id) {
   const user = await getUser(id);
+  // console.log(user, 'user');
   if (user) {
-    return basicDetails(user);
+    return basicDetails1(user);
   }
   return user;
 }
@@ -279,8 +286,15 @@ function randomTokenString() {
 }
 
 function basicDetails(user) {
-  const { id, firstName, lastName, username, role, avatar } = user;
-  return { id, firstName, lastName, username, role, avatar };
+  const { id, firstName, lastName, username, role, avatar , status} = user;
+  return { id, firstName, lastName, username, role, avatar ,status};
+}
+
+function basicDetails1(user) {
+  const { id, firstName, lastName, username, role, avatar , status} = user;
+  console.log(user, 'user');
+
+  return { id, firstName, lastName, username, role, avatar ,status};
 }
 
 async function createUserPermission({ userId, fieldName, view, edit, del }) {
@@ -319,8 +333,12 @@ async function getUserPermissionById(id) {
   return userPermissions.map((x) => basicUserPermissionDetails(x));
 }
 
-async function getAll() {
-  const users = await User.find().populate("role").sort({ updatedAt: -1 });
+async function getAll(search) {
+  let searchObj = {};
+    if (search) {
+      searchObj.username = { $regex: ".*" + search + ".*" };
+    }
+  const users = await User.find(searchObj).populate("role").sort({ updatedAt: -1 });
   return users.map((x) => basicDetails(x));
 }
 

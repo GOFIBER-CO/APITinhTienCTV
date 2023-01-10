@@ -2,17 +2,20 @@ const userService = require("../services/user.service");
 const Joi = require("joi");
 const validateRequest = require("../middleware/validate-request");
 const Role = require("../helpers/role");
+
 async function signup(req, res) {
-  const { username, password, firstName, lastName, role, domain } = req.body;
+  // console.log(req.body);
+  const { username, passwordHash, firstName, lastName, role, status } = req.body;
   var user = await userService.createUser({
     username,
-    password,
+    passwordHash,
     firstName,
     lastName,
     role,
-    domain,
+    status,
+    
   });
-  if (!user) {
+  if (user) {
     return res.status(400).json({ message: "User already exists" });
   } else {
     return res.json(user);
@@ -20,13 +23,14 @@ async function signup(req, res) {
 }
 async function editUser(req, res) {
   const id = req.params?.id;
-  const { username, firstName, lastName, role } = req.body;
+  const { username, firstName, lastName, role,status } = req.body;
   var user = await userService.editUser({
     id,
     username,
     firstName,
     lastName,
     role,
+    status,
   });
   if (!user) {
     return res
@@ -75,12 +79,15 @@ async function deleteAvatar(req, res) {
 }
 
 async function searchUser(req, res) {
-  const search = req.query?.q;
+  console.log(req.query, 'search');
+  // return;
+  const search = req.query?.search;
   var query = await userService.search(search);
   return res.json(query);
 }
 
 async function removeUser(req, res) {
+  console.log(req.params , 'id');
   const id = req.params?.id;
   var user = await userService.removeUser(id);
   if (user) {
@@ -161,9 +168,12 @@ function revokeToken(req, res, next) {
 }
 
 function getAll(req, res, next) {
+  console.log(req.query, 'asdsad');
+  const search = req.query?.search || "";
+  // return;
   try {
     userService
-      .getAll()
+      .getAll(search)
       .then((users) => res.json(users))
       .catch((error) => res.json(error));
   } catch (err) {
@@ -172,11 +182,11 @@ function getAll(req, res, next) {
 }
 
 function getById(req, res, next) {
-  console.log(req.user);
+    // console.log(req.user, 'ádadsa');
   // regular users can get their own record and admins can get any record
-  if (req.params.id !== req.user.id && req.user.role.name !== Role.Admin) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+  // if (req.params.id !== req.user.id && req.user.role.name !== Role.Admin) {
+  //   return res.status(401).json({ message: "Unauthorized" });
+  // }
 
   userService
     .getById(req.params.id)

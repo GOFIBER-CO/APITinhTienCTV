@@ -147,7 +147,9 @@ router.get("/users", getAll);
  *        $ref: '#/components/responses/UnauthorizedError'
  *
  */
-router.get("/users/:id", authorize(), getById);
+router.get("/users/:id"
+// , authorize()
+, getById);
 
 /**
  * @swagger
@@ -245,7 +247,9 @@ router.get("/users/:id/refresh-tokens", authorize(), getRefreshTokens);
  *
  */
 
-router.get("/users/user/search", authorize(), searchUser);
+router.get("/users/user/search"
+// , authorize()
+, searchUser);
 
 /**
  * @swagger
@@ -333,7 +337,7 @@ router.post("/user/login", authenticateSchema, authenticate);
  *       404:
  *        $ref: '#/components/responses/NotFoundError'
  */
-router.post("/users/signup", authorize(Role.Admin), signup);
+router.post("/users/signup", signup);
 
 /**
  * @swagger
@@ -500,7 +504,7 @@ router.post("/users/revoke-token", authorize(), revokeTokenSchema, revokeToken);
  */
 router.put(
   "/users/:id",
-  authorize(permissionFunction.USER, permissionFieldName.EDIT),
+  // authorize(permissionFunction.USER, permissionFieldName.EDIT),
   editUser
 );
 router.put(
@@ -554,7 +558,7 @@ router.patch("/user/editProfile", authorize(), editProfile);
  *        $ref: "#/components/responses/UnauthorizedError"
  *
  */
-router.delete("/users/delete/:id", authorize(Role.Admin), removeUser);
+router.delete("/users/delete/:id", removeUser);
 
 router.post("/users/user/permission", authorize(), createUserPermission);
 router.get("/users/user/permission/:id", authorize(), getUserPermissionById);
