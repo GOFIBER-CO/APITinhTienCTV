@@ -8,18 +8,18 @@ const {
   update,
   search,
   getAllDomainsByBrandId,
+  getAllDomainsByTeamId,
   getDomainsByBrandId,
   getAll
 } = require("../controllers/domain.controller");
 const Role = require("../helpers/role");
 
-router.get("/domains", search);
-router.get("/domains/getAll", getAll);
-router.get("/domains/getById/:id", getById);
-router.post("/domains", create);
-router.put("/domains/:id", update);
-router.delete("/domains/remove/:id", remove);
-router.get("/domains/getAllDomainsByBrandId/:brandId", getAllDomainsByBrandId);
-router.get("/domains/getDomainsByBrandId", getDomainsByBrandId);
+router.get("/domains",authorize(), search);
+router.get("/domains/getAll",authorize(), getAll);
+router.get("/domains/getById/:id",authorize(), getById);
+router.post("/domains",authorize(), create);
+router.put("/domains/:id",authorize(), update);
+router.delete("/domains/remove/:id",authorize(), remove);
+router.get("/domains/getByTeamId/:team",authorize(), getAllDomainsByTeamId);
 
 module.exports = router;

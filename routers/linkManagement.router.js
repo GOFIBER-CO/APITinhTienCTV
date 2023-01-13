@@ -11,13 +11,13 @@ const {
 } = require("../controllers/linkManagement.controller");
 const Role = require("../helpers/role");
 
-router.get("/link-managements", search);
-router.get("/link-managements/getById/:id", getById);
-router.post("/link-managements", create);
-router.put("/link-managements/:id", update);
-router.delete("/link-managements/remove/:id", remove);
+router.get("/link-managements",authorize(), search);
+router.get("/link-managements/getById/:id",authorize(), getById);
+router.post("/link-managements",authorize(), create);
+router.put("/link-managements/:id",authorize(), update);
+router.delete("/link-managements/remove/:id",authorize(), remove);
 router.get(
-  "/link-managements/getLinkManagementsByCollaboratorId",
+  "/link-managements/getLinkManagementsByCollaboratorId",authorize(),
   getLinkManagementsByCollaboratorId
 );
 

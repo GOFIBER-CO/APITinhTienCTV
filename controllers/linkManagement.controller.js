@@ -79,28 +79,31 @@ const create = async (req, res) => {
       },
       {
         $lookup: {
-          from: "team",
-          localField: "domain.team_id",
+          from: "teams",
+          localField: "domain.team",
           foreignField: "_id",
-          as: "domain.team",
+          as: "team",
         },
       },
+      // {
+      //   $unwind:"$domain.team"
+      // },
       {
         $lookup: {
           from: "brands",
-          localField: "team.brand_id",
+          localField: "team.brand",
           foreignField: "_id",
-          as: "team.brand",
+          as: "brand",
         },
       },
       {
-        $unwind: "$domain.team",
+        $unwind: "$team",
       },
       {
-        $unwind: "$team.brand",
+        $unwind: "$brand",
       },
     ]);
-
+    console.log(collaborators,'asdasdasdasdasdsa')
     const [collaborator] = collaborators;
 
     if (!collaborator) {
@@ -133,7 +136,7 @@ const create = async (req, res) => {
       body,
       inlineObjects
     );
-    const PRICE = req.body.price_per_words;
+    const PRICE = req.body.prices_per_word || 60;
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
@@ -148,10 +151,10 @@ const create = async (req, res) => {
     const {
       number_words: oldNumberWord,
       domain,
+      team,
+      brand,
       link_management_ids,
     } = collaborator;
-    const { team } = domain;
-
     const newTotal = number_word * PRICE;
 
     const newCollaborator = {
@@ -169,7 +172,7 @@ const create = async (req, res) => {
       total: Number(domain?.total || 0) + newTotal,
     };
     const newTeam = {
-      total: Number(team?.total || 0) + newTota,
+      total: Number(team?.total || 0) + newTotal,
     };
     const newBrand = {
       total: Number(brand?.total || 0) + newTotal,
@@ -194,7 +197,16 @@ const create = async (req, res) => {
       },
       { upsert: true }
     );
-
+    const updateTeam = Team.updateOne(
+      {
+        _id: team?._id,
+      },
+      {
+        $set: newTeam,
+        
+      },
+      { upsert: true }
+    );
     const updateBrand = Brand.updateOne(
       {
         _id: brand?._id,
@@ -205,16 +217,8 @@ const create = async (req, res) => {
       { upsert: true }
     );
 
-    const updateTeam = Team.updateOne(
-      {
-        _id: team?._id,
-      },
-      {
-        $set: newBrand,
-      },
-      { upsert: true }
-    );
-    Promise.all([updateCollaborator, updateDomain, updateBrand])
+ 
+    Promise.all([updateCollaborator, updateDomain, updateBrand,updateTeam])
       .then()
       .catch(() => {
         return res.status(400).json({ messages: `Error` });
@@ -313,29 +317,40 @@ const remove = async (req, res) => {
       },
       {
         $lookup: {
-          from: "brands",
-          localField: "domain.brand_id",
+          from: "teams",
+          localField: "domain.team",
           foreignField: "_id",
-          as: "domain.brand",
+          as: "team",
         },
       },
       {
-        $unwind: "$domain.brand",
+        $unwind: "$team",
+      },
+      {
+        $lookup: {
+          from: "brands",
+          localField: "team.brand",
+          foreignField: "_id",
+          as: "brand",
+        },
+      },
+      {
+        $unwind: "$brand",
       },
     ]);
-
+    console.log(collaborators,'asdasdasdasdsaxxxxxxxxxxxxxxxxxxx')
     const [collaborator] = collaborators;
 
     if (!collaborator) {
       return res.status(400).json({ message: "Not found Collaborator" });
     }
-
     const { number_words } = link;
     const { number_words: oldNumberWord, domain, link_ids } = collaborator;
-    const { brand } = domain;
-
-    const total = number_words * PRICE;
-
+    const { team } = collaborator;
+    const {brand} = collaborator;
+    
+    const total = number_words * link.prices_per_word;
+    console.log(team,brand,total,'asdsadasdasdsadasd')
     const newCollaborator = {
       number_words: Number(oldNumberWord) - number_words,
       total: Number(collaborator?.total || 0) - total,
@@ -348,7 +363,9 @@ const remove = async (req, res) => {
     const newDomain = {
       total: Number(domain?.total || 0) - total,
     };
-
+    const newTeam = {
+      total: Number(team?.total || 0) - total,
+    };
     const newBrand = {
       total: Number(brand?.total || 0) - total,
     };

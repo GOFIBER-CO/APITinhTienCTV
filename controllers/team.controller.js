@@ -39,7 +39,7 @@ class TeamController {
   async getById(req, res) {
     try {
       const id = req.params.id;
-      let match = await Team.findById(id);
+      let match = await Team.findById(id).populate('brand');
       if (!match) {
         return res
           .status(400)

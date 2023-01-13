@@ -171,9 +171,9 @@ const getDomainsByBrandId = async (req, res) => {
 };
 const getAllDomainsByTeamId = async (req, res) => {
   try {
-    const { teamId } = req.params;
+    const { team } = req.params;
 
-    const data = await DomainService.getAllDomainsByTeamId(teamId);
+    const data = await DomainService.getAllDomainsByTeamId(team);
 
     return res.status(200).json(data);
   } catch (error) {
@@ -233,4 +233,5 @@ module.exports = {
   getAllDomainsByBrandId,
   getDomainsByBrandId,
   getAll,
+  getAllDomainsByTeamId
 };

@@ -14,10 +14,10 @@ const domainSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
-    brand_id: {
+    team: {
       type: ObjectId,
       require: true,
-      ref: "Brand",
+      ref: "Team",
     },
   },
   { timestamps: true }

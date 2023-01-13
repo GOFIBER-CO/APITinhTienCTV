@@ -3,10 +3,10 @@ const router = express.Router();
 const authorize = require("../middleware/authorize");
 const teamController = require("../controllers/team.controller");
 
-router.get("/team", teamController.getPaging);
-router.post("/team", teamController.create);
-router.put("/team/:id", teamController.update);
-router.delete("/team/:id", teamController.delete);
-router.get("/team/getById/:id", teamController.getById);
+router.get("/teams",authorize(), teamController.getPaging);
+router.post("/teams",authorize(), teamController.create);
+router.put("/teams/:id",authorize(), teamController.update);
+router.delete("/teams/:id",authorize(), teamController.delete);
+router.get("/teams/getById/:id",authorize(), teamController.getById);
 
 module.exports = router;

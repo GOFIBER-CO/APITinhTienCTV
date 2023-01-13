@@ -1,19 +1,18 @@
 const { genFieldsRequire } = require("../helpers");
 const Domain = require("../models/domain.model");
 const BrandService = require("../services/brand.service");
+const {ObjectId} = require('mongoose').Types.ObjectId;
 
 const create = async (data) => {
   try {
-    const { name, total, team_id } = data;
+    const { name, total, team } = data;
 
-    // if (!name ) {
-    //   throw { message: "Vui lòng nhập thông tin" };
-    if (!name || !team_id) {
+    if (!name || !team) {
       throw {
         message: "Vui lòng nhập thông tin",
         description: genFieldsRequire({
           name,
-          brand_id,
+          team,
         }),
       };
     }
@@ -22,7 +21,7 @@ const create = async (data) => {
 
     domain.name = name;
     domain.total = Number(total || 0);
-    domain.team_id = team_id;
+    domain.team = team;
 
     const newDomain = await domain.save();
 
@@ -32,9 +31,9 @@ const create = async (data) => {
   }
 };
 
-const update = async ({ id, team }) => {
+const update = async ({ id, domain }) => {
   try {
-    const { name, total, team_id } = domain;
+    const { name, total, team } = domain;
 
     if (!name) {
       throw { message: "Vui lòng nhập thông tin" };
@@ -58,6 +57,7 @@ const search = async (pageSize = 10, pageIndex = 1, search = "") => {
     let data = await Domain.find(searchObj)
       .skip(pageSize * pageIndex - pageSize)
       .limit(parseInt(pageSize))
+      .populate("team")
       .sort({
         createdAt: "DESC",
       });
@@ -82,7 +82,7 @@ const search = async (pageSize = 10, pageIndex = 1, search = "") => {
 
 const getById = async (id) => {
   try {
-    const domain = await Domain.findById(id);
+    const domain = await Domain.findById(id).populate("team");
 
     if (!domain) throw { message: "Not found Domain" };
 
@@ -126,33 +126,33 @@ const getAllDomainsByBrandId = async (brandId) => {
     throw error;
   }
 };
-const getAllDomainsByTeamId = async (teamId) => {
+const getAllDomainsByTeamId = async (team) => {
   try {
     const result = await Domain.aggregate([
       {
         $addFields: {
-          teamId: {
-            $toString: "$team_id",
+          team: {
+            $toString: "$team",
           },
         },
       },
       {
         $match: {
-          teamId,
+          team,
         },
       },
       {
         $lookup: {
-          from: "team",
-          localField: "team_id",
+          from: "teams",
+          localField: "team",
           foreignField: "_id",
           as: "team",
         },
       },
-    ]);
+    ])
 
     return {
-      teamId,
+      team,
       data: result || [],
       count: result?.length || 0,
     };
