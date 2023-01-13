@@ -1,16 +1,14 @@
 const { genFieldsRequire } = require("../helpers");
-const Brand = require("../models/brand.model");
-const Collaborator = require("../models/collaborator.model");
 const Domain = require("../models/domain.model");
 const BrandService = require("../services/brand.service");
 
 const create = async (data) => {
   try {
-    const { name, total, brand_id } = data;
+    const { name, total, team_id } = data;
 
     // if (!name ) {
     //   throw { message: "Vui lòng nhập thông tin" };
-    if (!name || !brand_id) {
+    if (!name || !team_id) {
       throw {
         message: "Vui lòng nhập thông tin",
         description: genFieldsRequire({
@@ -20,13 +18,11 @@ const create = async (data) => {
       };
     }
 
-    const brand = await BrandService.getById(brand_id);
-
     const domain = new Domain();
 
     domain.name = name;
     domain.total = Number(total || 0);
-    domain.brand_id = brand._id;
+    domain.team_id = team_id;
 
     const newDomain = await domain.save();
 
@@ -36,15 +32,14 @@ const create = async (data) => {
   }
 };
 
-const update = async ({ id, domain }) => {
+const update = async ({ id, team }) => {
   try {
-    const { name, total, brand_id} = domain;
+    const { name, total, team_id } = domain;
 
-    if (!name ) {
+    if (!name) {
       throw { message: "Vui lòng nhập thông tin" };
     }
 
-    // const newDomain = await Domain.findByIdAndUpdate(id, domain);?
     const newDomain = await Domain.findByIdAndUpdate(id, domain, { new: true });
 
     return newDomain;
@@ -131,7 +126,40 @@ const getAllDomainsByBrandId = async (brandId) => {
     throw error;
   }
 };
+const getAllDomainsByTeamId = async (teamId) => {
+  try {
+    const result = await Domain.aggregate([
+      {
+        $addFields: {
+          teamId: {
+            $toString: "$team_id",
+          },
+        },
+      },
+      {
+        $match: {
+          teamId,
+        },
+      },
+      {
+        $lookup: {
+          from: "team",
+          localField: "team_id",
+          foreignField: "_id",
+          as: "team",
+        },
+      },
+    ]);
 
+    return {
+      teamId,
+      data: result || [],
+      count: result?.length || 0,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
 const getDomainsByBrandId = async (
   brandId,
   pageIndex = 1,
@@ -207,7 +235,81 @@ const getDomainsByBrandId = async (
     throw error;
   }
 };
+const getDomainsByTeamId = async (
+  teamId,
+  pageIndex = 1,
+  pageSize = 10,
+  search = ""
+) => {
+  try {
+    const data = await Domain.aggregate([
+      {
+        $addFields: {
+          teamId: {
+            $toString: "$team_id",
+          },
+        },
+      },
+      {
+        $match: {
+          teamId,
+          ...(search
+            ? {
+                name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              }
+            : {}),
+        },
+      },
+      {
+        $lookup: {
+          from: "team",
+          localField: "team_id",
+          foreignField: "_id",
+          as: "team",
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize) || 9999999,
+      },
+    ]);
 
+    const count = await Domain.find({
+      brand_id: brandId,
+      ...(search
+        ? {
+            name: {
+              $regex: ".*" + search + ".*",
+              $options: "i",
+            },
+          }
+        : {}),
+    }).countDocuments();
+
+    let totalPages = Math.ceil(count / pageSize);
+
+    return {
+      pageIndex,
+      pageSize,
+      data,
+      count,
+      teamId,
+      totalPages,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
 const getAll = async () => {
   try {
     const domain = await Domain.find();
@@ -226,6 +328,8 @@ module.exports = {
   search,
   getById,
   getAllDomainsByBrandId,
+  getAllDomainsByTeamId,
   getDomainsByBrandId,
-  getAll
+  getDomainsByTeamId,
+  getAll,
 };

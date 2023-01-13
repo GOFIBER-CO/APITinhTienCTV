@@ -263,7 +263,9 @@ const getCollaboratorsByBrand = async (
   brandId,
   pageIndex,
   pageSize,
-  search
+  search,
+  dateFrom,
+  dateTo
 ) => {
   try {
     const data = await Brand.aggregate([
@@ -333,7 +335,14 @@ const getCollaboratorsByBrand = async (
     throw error;
   }
 };
-
+const getStatisticByBrand = async (
+  brandId,
+  pageIndex,
+  pageSize,
+  search,
+  dateFrom,
+  dateTo
+) => {};
 module.exports = {
   create,
   update,

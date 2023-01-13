@@ -72,10 +72,17 @@ async function printDoc(id) {
   try {
     const auth = await authorize();
     const docs = google.docs({ version: "v1", auth });
-    const res = await docs.documents.get({
-      documentId: id,
-    });
-
+    const res = await docs.documents
+      .get({
+        documentId: id,
+      })
+      .then((res) => {
+        return res;
+      })
+      .catch((error) => {
+        console.log(error);
+        return error;
+      });
     return res;
   } catch (error) {
     throw error;

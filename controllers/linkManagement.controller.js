@@ -10,6 +10,7 @@ const Collaborator = require("../models/collaborator.model");
 const { PRICE, LINK_STATUS, genFieldsRequire } = require("../helpers");
 const Domain = require("../models/domain.model");
 const Brand = require("../models/brand.model");
+const Team = require("../models/team.model");
 const NAME = "Link Management";
 
 const search = async (req, res) => {
@@ -78,14 +79,25 @@ const create = async (req, res) => {
       },
       {
         $lookup: {
-          from: "brands",
-          localField: "domain.brand_id",
+          from: "team",
+          localField: "domain.team_id",
           foreignField: "_id",
-          as: "domain.brand",
+          as: "domain.team",
         },
       },
       {
-        $unwind: "$domain.brand",
+        $lookup: {
+          from: "brands",
+          localField: "team.brand_id",
+          foreignField: "_id",
+          as: "team.brand",
+        },
+      },
+      {
+        $unwind: "$domain.team",
+      },
+      {
+        $unwind: "$team.brand",
       },
     ]);
 
@@ -121,7 +133,7 @@ const create = async (req, res) => {
       body,
       inlineObjects
     );
-
+    const PRICE = req.body.price_per_words;
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
@@ -138,7 +150,7 @@ const create = async (req, res) => {
       domain,
       link_management_ids,
     } = collaborator;
-    const { brand } = domain;
+    const { team } = domain;
 
     const newTotal = number_word * PRICE;
 
@@ -156,7 +168,9 @@ const create = async (req, res) => {
     const newDomain = {
       total: Number(domain?.total || 0) + newTotal,
     };
-
+    const newTeam = {
+      total: Number(team?.total || 0) + newTota,
+    };
     const newBrand = {
       total: Number(brand?.total || 0) + newTotal,
     };
@@ -191,6 +205,15 @@ const create = async (req, res) => {
       { upsert: true }
     );
 
+    const updateTeam = Team.updateOne(
+      {
+        _id: team?._id,
+      },
+      {
+        $set: newBrand,
+      },
+      { upsert: true }
+    );
     Promise.all([updateCollaborator, updateDomain, updateBrand])
       .then()
       .catch(() => {

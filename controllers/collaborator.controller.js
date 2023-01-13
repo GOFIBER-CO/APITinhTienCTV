@@ -168,12 +168,15 @@ const getCollaboratorsByBrand = async (req, res) => {
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
-
+    const dateFrom = req.query?.dateFrom;
+    const dateTo = req.query?.dateTo;
     const data = await CollaboratorService.getCollaboratorsByBrand(
       brandId,
       pageIndex,
       pageSize,
-      search
+      search,
+      dateFrom,
+      dateTo
     );
     return res.status(200).json(data);
   } catch (error) {

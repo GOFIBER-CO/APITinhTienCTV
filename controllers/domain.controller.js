@@ -1,6 +1,6 @@
 const Domain = require("../models/domain.model");
 const DomainService = require("../services/domain.service");
-const LinkManagement = require("../models/linkManagement.model")
+const LinkManagement = require("../models/linkManagement.model");
 const { dashLogger } = require("../logger");
 const ResponseModel = require("../helpers/ResponseModel");
 
@@ -57,7 +57,7 @@ const create = async (req, res) => {
     });
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
-    console.log(error.message,'ddd');
+    console.log(error.message, "ddd");
     return res.status(400).json({
       message: error?.message,
     });
@@ -156,6 +156,44 @@ const getDomainsByBrandId = async (req, res) => {
 
     const data = await DomainService.getDomainsByBrandId(
       brandId,
+      pageIndex,
+      pageSize,
+      search
+    );
+
+    return res.status(200).json(data);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+const getAllDomainsByTeamId = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    const data = await DomainService.getAllDomainsByTeamId(teamId);
+
+    return res.status(200).json(data);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
+const getDomainsByTeamId = async (req, res) => {
+  try {
+    const { teamId } = req.query;
+
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
+
+    const data = await DomainService.getDomainsByTeamId(
+      teamId,
       pageIndex,
       pageSize,
       search
