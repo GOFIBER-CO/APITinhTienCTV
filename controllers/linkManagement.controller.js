@@ -386,7 +386,15 @@ const remove = async (req, res) => {
       },
       { upsert: true }
     );
-
+    const updateTeam = Domain.updateOne(
+      {
+        _id: team?._id,
+      },
+      {
+        $set: newTeam,
+      },
+      { upsert: true }
+    );
     const updateBrand = Brand.updateOne(
       {
         _id: brand?._id,
@@ -397,7 +405,13 @@ const remove = async (req, res) => {
       { upsert: true }
     );
 
-    Promise.all([deleteLink, updateCollaborator, updateDomain, updateBrand])
+    Promise.all([
+      deleteLink,
+      updateCollaborator,
+      updateDomain,
+      updateBrand,
+      updateTeam,
+    ])
       .then()
       .catch((err) => {
         dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
