@@ -20,7 +20,7 @@ class TeamController {
   }
   async create(req, res, next) {
     try {
-      // console.log(req.body);
+      
       const match = await Team.findOne({ name: req.body.name });
       if (match) {
         return res
@@ -37,6 +37,7 @@ class TeamController {
     }
   }
   async update(req, res) {
+    console.log(req.body, 'body', req.params.id, 'id');
     try {
       const id = req.params.id;
       let match = await Team.findById(id);
@@ -46,7 +47,7 @@ class TeamController {
           .json({ success: false, message: "Team doesn't exists!" });
       }
       const updateTeam = await Team.findByIdAndUpdate(id, req.body);
-      return res.status(200).json({ success: true });
+      return res.status(200).json({ success: true , data : updateTeam});
     } catch (error) {
       console.log(error);
       return res.status(500).json({ success: false, message: error });

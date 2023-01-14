@@ -7,10 +7,10 @@ const teamSchema = new mongoose.Schema(
       require: true,
       unique: true,
     },
-    brand: {
+    brand: [{
       type: mongoose.Types.ObjectId,
       ref: "Brand",
-    },
+    }],
     total: {
       type: Number,
       // require: true,
