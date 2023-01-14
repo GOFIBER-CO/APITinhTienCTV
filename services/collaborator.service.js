@@ -162,7 +162,7 @@ const getAllCollaboratorsByDomainId = async (domainId) => {
 };
 
 const getCollaboratorsByDomainId = async (
-  domainId,
+  domainId = "",
   pageIndex = 1,
   pageSize = 10,
   search = ""

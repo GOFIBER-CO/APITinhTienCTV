@@ -39,7 +39,7 @@ class TeamController {
   async getById(req, res) {
     try {
       const id = req.params.id;
-      let match = await Team.findById(id).populate('brand');
+      let match = await Team.findById(id).populate("brand");
       if (!match) {
         return res
           .status(400)
@@ -87,6 +87,37 @@ class TeamController {
       }
       await Team.findByIdAndDelete(id);
       return res.status(200).json({ success: true });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ success: false, message: error });
+    }
+  }
+  async getTeamByBrand(req, res) {
+    try {
+      const brand = req.params.brand || "";
+      const data = await Team.aggregate([
+        {
+          $addFields: {
+            brand: {
+              $toString: "$brand",
+            },
+          },
+        },
+        {
+          $match: {
+            brand,
+          },
+        },
+        {
+          $lookup: {
+            from: "brands",
+            localField: "brand",
+            foreignField: "_id",
+            as: "brand",
+          },
+        },
+      ]);
+      return res.status(200).json({ success: true, data });
     } catch (error) {
       console.log(error);
       return res.status(500).json({ success: false, message: error });
