@@ -182,6 +182,7 @@ async function authenticate({ username, password, ipAddress }) {
 async function refreshToken({ token, ipAddress }) {
   const refreshToken = await getRefreshToken(token);
   const { user } = refreshToken;
+
   // replace old refresh token with a new one and save
   const newRefreshToken = generateRefreshToken(user, ipAddress);
   refreshToken.revoked = Date.now();

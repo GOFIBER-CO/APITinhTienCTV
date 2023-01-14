@@ -103,7 +103,6 @@ const create = async (req, res) => {
         $unwind: "$brand",
       },
     ]);
-    console.log(collaborators,'asdasdasdasdasdsa')
     const [collaborator] = collaborators;
 
     if (!collaborator) {
@@ -203,7 +202,6 @@ const create = async (req, res) => {
       },
       {
         $set: newTeam,
-        
       },
       { upsert: true }
     );
@@ -217,8 +215,7 @@ const create = async (req, res) => {
       { upsert: true }
     );
 
- 
-    Promise.all([updateCollaborator, updateDomain, updateBrand,updateTeam])
+    Promise.all([updateCollaborator, updateDomain, updateBrand, updateTeam])
       .then()
       .catch(() => {
         return res.status(400).json({ messages: `Error` });
@@ -338,7 +335,6 @@ const remove = async (req, res) => {
         $unwind: "$brand",
       },
     ]);
-    console.log(collaborators,'asdasdasdasdsaxxxxxxxxxxxxxxxxxxx')
     const [collaborator] = collaborators;
 
     if (!collaborator) {
@@ -347,10 +343,9 @@ const remove = async (req, res) => {
     const { number_words } = link;
     const { number_words: oldNumberWord, domain, link_ids } = collaborator;
     const { team } = collaborator;
-    const {brand} = collaborator;
-    
+    const { brand } = collaborator;
+
     const total = number_words * link.prices_per_word;
-    console.log(team,brand,total,'asdsadasdasdsadasd')
     const newCollaborator = {
       number_words: Number(oldNumberWord) - number_words,
       total: Number(collaborator?.total || 0) - total,
@@ -411,28 +406,6 @@ const remove = async (req, res) => {
         });
       });
 
-    // if (id) {
-    //   LinkManagement.findByIdAndRemove(id).exec((err, data) => {
-    //     if (err) {
-    //       dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-    //       return res.status(400).json({
-    //         message: err.message,
-    //       });
-    //     }
-    //     res.json({
-    //       success: true,
-    //       message: `${NAME} is deleted successfully`,
-    //     });
-    //   });
-    // } else {
-    //   dashLogger.error(
-    //     `Error : 'Not found ${NAME}', Request : ${req.originalUrl}`
-    //   );
-    //   res.status(400).json({
-    //     message: `Not found ${NAME}`,
-    //   });
-    // }
-
     return res.status(200).json({
       success: true,
       message: `${NAME} is deleted successfully`,
@@ -469,6 +442,185 @@ const getLinkManagementsByCollaboratorId = async (req, res) => {
     });
   }
 };
+const getStatisticByBrand = async (req, res) => {
+  const pageSize = Number(req.query?.pageSize) || 10;
+  const pageIndex = Number(req.query?.pageIndex) || 1;
+  const search = req.query?.search || "";
+  const dateFrom =
+    new Date(req.query?.dateFrom) ||
+    new Date(Date.now() - 30 * 60 * 60 * 24 * 1000);
+  const dateTo = new Date(req.query?.dateTo) || new Date(Date.now());
+  const data = await Brand.aggregate([
+    {
+      $addFields: {
+        id: {
+          $toString: "$_id",
+        },
+      },
+    },
+    {
+      $match: {
+        ...(search
+          ? {
+              name: {
+                $regex: ".*" + search + ".*",
+                $options: "i",
+              },
+            }
+          : {}),
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "_id",
+        foreignField: "brand",
+        pipeline: [
+          {
+            $lookup: {
+              from: "domains",
+              localField: "_id",
+              foreignField: "team",
+              pipeline: [
+                {
+                  $lookup: {
+                    from: "collaborators",
+                    localField: "_id",
+                    foreignField: "domain_id",
+                    as: "collaborators",
+                    pipeline: [
+                      {
+                        $lookup: {
+                          from: "linkmanagements",
+                          localField: "link_management_ids",
+                          foreignField: "_id",
+                          as: "link_management_ids",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+              as: "domains",
+            },
+          },
+        ],
+        as: "team",
+      },
+    },
+
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+    },
+    {
+      $limit: Number(pageSize),
+    },
+    {
+      $match: {
+        "team.domains.collaborators.link_management_ids.createdAt": {
+          $gte: new Date(dateFrom.toISOString()),
+          $lte: new Date(dateTo.toISOString()),
+        },
+      },
+    },
+  ]);
+  return res.status(200).json({ success: true, data });
+};
+const getStatisticByTeam = async (req, res) => {
+  const pageSize = Number(req.query?.pageSize) || 10;
+  const pageIndex = Number(req.query?.pageIndex) || 1;
+  const search = req.query?.search || "";
+  const dateFrom = req.query?.dateFrom;
+  const dateTo = req.query?.dateTo;
+
+  const data = await Brand.aggregate([
+    {
+      $addFields: {
+        id: {
+          $toString: "$_id",
+        },
+      },
+    },
+    {
+      $match: {
+        ...(search
+          ? {
+              name: {
+                $regex: ".*" + search + ".*",
+                $options: "i",
+              },
+            }
+          : {}),
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "_id",
+        foreignField: "brand",
+        pipeline: [
+          {
+            $lookup: {
+              from: "domains",
+              localField: "_id",
+              foreignField: "team",
+              pipeline: [
+                {
+                  $lookup: {
+                    from: "collaborators",
+                    localField: "_id",
+                    foreignField: "domain_id",
+                    as: "collaborators",
+                    pipeline: [
+                      {
+                        $lookup: {
+                          from: "linkmanagements",
+                          localField: "link_management_ids",
+                          foreignField: "_id",
+                          as: "link_management_ids",
+                        },
+                        $match: {
+                          createdAt: {
+                            $gte: ISODate(
+                              new Date(new Date() - day * 60 * 60 * 24 * 1000)
+                            ),
+                            $lte: ISODate(
+                              new Date(new Date() - day * 60 * 60 * 24 * 1000)
+                            ),
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+              as: "domains",
+            },
+          },
+        ],
+        as: "team",
+      },
+    },
+
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+    },
+    {
+      $limit: Number(pageSize),
+    },
+  ]);
+  return res.status(200).json({ success: true, data });
+};
 
 module.exports = {
   search,
@@ -477,4 +629,5 @@ module.exports = {
   update,
   getById,
   getLinkManagementsByCollaboratorId,
+  getStatisticByBrand,
 };
