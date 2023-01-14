@@ -4,7 +4,6 @@ const validateRequest = require("../middleware/validate-request");
 const Role = require("../helpers/role");
 
 async function signup(req, res) {
-  // console.log(req.body);
   const { username, passwordHash, firstName, lastName, role, status } = req.body;
   var user = await userService.createUser({
     username,
@@ -15,7 +14,7 @@ async function signup(req, res) {
     status,
     
   });
-  if (user) {
+  if (!user) {
     return res.status(400).json({ message: "User already exists" });
   } else {
     return res.json(user);
