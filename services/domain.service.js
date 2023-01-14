@@ -1,7 +1,7 @@
 const { genFieldsRequire } = require("../helpers");
 const Domain = require("../models/domain.model");
 const BrandService = require("../services/brand.service");
-const {ObjectId} = require('mongoose').Types.ObjectId;
+const { ObjectId } = require("mongoose").Types.ObjectId;
 
 const create = async (data) => {
   try {
@@ -128,28 +128,31 @@ const getAllDomainsByBrandId = async (brandId) => {
 };
 const getAllDomainsByTeamId = async (team) => {
   try {
-    const result = await Domain.aggregate([
-      {
-        $addFields: {
-          team: {
-            $toString: "$team",
-          },
-        },
-      },
-      {
-        $match: {
-          team,
-        },
-      },
-      {
-        $lookup: {
-          from: "teams",
-          localField: "team",
-          foreignField: "_id",
-          as: "team",
-        },
-      },
-    ])
+    // const result = await Domain.aggregate([
+    //   {
+    //     $addFields: {
+    //       team: {
+    //         $toString: "$team",
+    //       },
+    //     },
+    //   },
+    //   {
+    //     $match: {
+    //       team,
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "teams",
+    //       localField: "team",
+    //       foreignField: "_id",
+    //       as: "team",
+    //     },
+    //   },
+    // ])
+    const result = await Domain.find({ team: team.toString() }).populate(
+      "team"
+    );
 
     return {
       team,

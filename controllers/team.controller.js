@@ -2,10 +2,10 @@ const { dashLogger } = require("../logger");
 const Team = require("../models/team.model");
 
 class TeamController {
-  async getAll(req, res, next){
+  async getAll(req, res, next) {
     try {
       const Teams = await Team.find();
-  
+
       return res.status(200).json({
         success: true,
         message: "Success",
@@ -69,7 +69,6 @@ class TeamController {
     }
   }
   async getPaging(req, res) {
-    
     try {
       const pageSize = req.query.pageSize || 10;
       const pageIndex = req.query.pageIndex || 1;
@@ -114,28 +113,9 @@ class TeamController {
   async getTeamByBrand(req, res) {
     try {
       const brand = req.params.brand || "";
-      const data = await Team.aggregate([
-        {
-          $addFields: {
-            brand: {
-              $toString: "$brand",
-            },
-          },
-        },
-        {
-          $match: {
-            brand,
-          },
-        },
-        {
-          $lookup: {
-            from: "brands",
-            localField: "brand",
-            foreignField: "_id",
-            as: "brand",
-          },
-        },
-      ]);
+      const data = await Team.find({
+        brand: brand.toString(),
+      }).populate("brand");
       return res.status(200).json({ success: true, data });
     } catch (error) {
       console.log(error);

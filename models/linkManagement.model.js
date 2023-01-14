@@ -23,10 +23,10 @@ const linkManagementSchema = new mongoose.Schema(
       require: true,
       min: 0,
     },
-    prices_per_word: {
-      type:Number,
-      require:true,
-      default:60
+    price_per_word: {
+      type: Number,
+      require: true,
+      default: 60,
     },
     number_images: {
       type: Number,

@@ -135,7 +135,7 @@ const create = async (req, res) => {
       body,
       inlineObjects
     );
-    const PRICE = req.body.prices_per_word || 60;
+    const PRICE = req.body.price_per_word || 60;
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
@@ -345,7 +345,7 @@ const remove = async (req, res) => {
     const { team } = collaborator;
     const { brand } = collaborator;
 
-    const total = number_words * link.prices_per_word;
+    const total = number_words * link.price_per_word;
     const newCollaborator = {
       number_words: Number(oldNumberWord) - number_words,
       total: Number(collaborator?.total || 0) - total,
