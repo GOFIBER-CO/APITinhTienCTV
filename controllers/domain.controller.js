@@ -233,5 +233,5 @@ module.exports = {
   getAllDomainsByBrandId,
   getDomainsByBrandId,
   getAll,
-  getAllDomainsByTeamId
+  getAllDomainsByTeamId,
 };

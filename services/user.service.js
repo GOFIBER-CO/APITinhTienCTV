@@ -41,7 +41,6 @@ async function createUser({
   lastName,
   role,
   status,
-  
 }) {
   const userQuery = await User.findOne({ username });
   const roleQuery = await Role.findById(role);
@@ -54,7 +53,6 @@ async function createUser({
       status: status,
       role: roleQuery?.name,
       // avatar:avatar,
-      
     });
     await user.save();
     return user;
@@ -62,29 +60,37 @@ async function createUser({
     return null;
   }
 }
-async function editUser({ id, username, password, firstName, lastName, role, status }) {
-  const roleQuery = await Role.findById( role );
+async function editUser({
+  id,
+  username,
+  password,
+  firstName,
+  lastName,
+  role,
+  status,
+}) {
+  const roleQuery = await Role.findById(role);
   var userQuery = await getById(id);
   // console.log(userQuery,'userQuery');
   // if (roleQuery && userQuery) {
-    var update = {
-      username: username,
-      firstName: firstName,
-      lastName: lastName,
-      role: roleQuery.name,
-      status: status,
-      
-      passwordHash:
-        password && password.length
-          ? bcrypt.hashSync(password, 10)
-          : userQuery.passwordHash,
-    };
-    try {
-      let result = await User.findByIdAndUpdate(id, update, { new: true });
-      return result;
-    } catch (error) {
-      return error.message;
-    }
+  var update = {
+    username: username,
+    firstName: firstName,
+    lastName: lastName,
+    role: roleQuery.name,
+    status: status,
+
+    passwordHash:
+      password && password.length
+        ? bcrypt.hashSync(password, 10)
+        : userQuery.passwordHash,
+  };
+  try {
+    let result = await User.findByIdAndUpdate(id, update, { new: true });
+    return result;
+  } catch (error) {
+    return error.message;
+  }
   // } else {
   //   return null;
   // }
@@ -150,7 +156,7 @@ async function removeUser(id) {
 
 async function authenticate({ username, password, ipAddress }) {
   const user = await User.findOne({ username });
-
+  console.log(user, "asdasdasdas");
   if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
     return {
       status: 0,
@@ -161,7 +167,6 @@ async function authenticate({ username, password, ipAddress }) {
   // authentication successful so generate jwt and refresh tokens
   const jwtToken = generateJwtToken(user);
   const refreshToken = generateRefreshToken(user, ipAddress);
-  console.log(refreshToken, "asdsadsadsadasdsadasdsa");
   // save refresh token
   await refreshToken.save();
 
@@ -177,7 +182,6 @@ async function authenticate({ username, password, ipAddress }) {
 async function refreshToken({ token, ipAddress }) {
   const refreshToken = await getRefreshToken(token);
   const { user } = refreshToken;
-
   // replace old refresh token with a new one and save
   const newRefreshToken = generateRefreshToken(user, ipAddress);
   refreshToken.revoked = Date.now();
@@ -259,6 +263,7 @@ async function getUser(id) {
 
 async function getRefreshToken(token) {
   const refreshToken = await RefreshToken.findOne({ token }).populate("user");
+  console.log(refreshToken, "asdsadas1111");
   if (!refreshToken || !refreshToken.isActive)
     return { message: "Invalid token" };
   return refreshToken;
@@ -286,15 +291,15 @@ function randomTokenString() {
 }
 
 function basicDetails(user) {
-  const { id, firstName, lastName, username, role, avatar , status} = user;
-  return { id, firstName, lastName, username, role, avatar ,status};
+  const { id, firstName, lastName, username, role, avatar, status } = user;
+  return { id, firstName, lastName, username, role, avatar, status };
 }
 
 function basicDetails1(user) {
-  const { id, firstName, lastName, username, role, avatar , status} = user;
-  console.log(user, 'user');
+  const { id, firstName, lastName, username, role, avatar, status } = user;
+  console.log(user, "user");
 
-  return { id, firstName, lastName, username, role, avatar ,status};
+  return { id, firstName, lastName, username, role, avatar, status };
 }
 
 async function createUserPermission({ userId, fieldName, view, edit, del }) {
@@ -335,10 +340,12 @@ async function getUserPermissionById(id) {
 
 async function getAll(search) {
   let searchObj = {};
-    if (search) {
-      searchObj.username = { $regex: ".*" + search + ".*" };
-    }
-  const users = await User.find(searchObj).populate("role").sort({ updatedAt: -1 });
+  if (search) {
+    searchObj.username = { $regex: ".*" + search + ".*" };
+  }
+  const users = await User.find(searchObj)
+    .populate("role")
+    .sort({ updatedAt: -1 });
   return users.map((x) => basicDetails(x));
 }
 
