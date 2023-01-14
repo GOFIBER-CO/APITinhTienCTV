@@ -2,9 +2,25 @@ const { dashLogger } = require("../logger");
 const Team = require("../models/team.model");
 
 class TeamController {
+  async getAll(req, res, next){
+    try {
+      const Teams = await Team.find();
+  
+      return res.status(200).json({
+        success: true,
+        message: "Success",
+        data: Teams,
+      });
+    } catch (error) {
+      dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+  }
   async create(req, res, next) {
     try {
-      console.log(req.body);
+      // console.log(req.body);
       const match = await Team.findOne({ name: req.body.name });
       if (match) {
         return res
@@ -53,13 +69,16 @@ class TeamController {
     }
   }
   async getPaging(req, res) {
+    
     try {
-      const pageSize = req.params.pageSize || 10;
-      const pageIndex = req.params.pageIndex || 1;
-      const search = req.params.search || "";
+      const pageSize = req.query.pageSize || 10;
+      const pageIndex = req.query.pageIndex || 1;
+      const search = req.query.search || "";
       let searchQuery = {};
       if (search) {
+        // { $regex: ".*" + search + ".*" };
         searchQuery = { name: { $regex: search, $options: "i" } };
+        // searchQuery.name = { $regex: ".*" + search + ".*" };
       }
       const data = await Team.find(searchQuery)
         .populate("brand")

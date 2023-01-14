@@ -39,7 +39,7 @@ const getById = async (req, res) => {
 };
 
 const create = async (req, res) => {
-  // console.log(req.body,'đsss');
+  console.log(req.body,'đsss');
   try {
     const { name } = req.body.name;
 
