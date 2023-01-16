@@ -2,9 +2,15 @@ const userService = require("../services/user.service");
 const Joi = require("joi");
 const validateRequest = require("../middleware/validate-request");
 const Role = require("../helpers/role");
+const userModel = require("../models/user.model");
 
 async function signup(req, res) {
+  
   const { username, passwordHash, firstName, lastName, role, status } = req.body;
+  const checkUser = await userModel.find({username: username})
+  if (checkUser.length > 0) {
+    return res.status(400).json({ message: "User already exists" });
+  } 
   var user = await userService.createUser({
     username,
     passwordHash,
@@ -14,13 +20,11 @@ async function signup(req, res) {
     status,
     
   });
-  if (!user) {
-    return res.status(400).json({ message: "User already exists" });
-  } else {
     return res.json(user);
-  }
 }
 async function editUser(req, res) {
+  console.log(req.body, 'body', req.params, 'id');
+  
   const id = req.params?.id;
   const { username, firstName, lastName, role,status } = req.body;
   var user = await userService.editUser({
@@ -30,6 +34,7 @@ async function editUser(req, res) {
     lastName,
     role,
     status,
+    // password:'',
   });
   if (!user) {
     return res

@@ -9,6 +9,7 @@ const RefreshToken = require("../models/refreshToken.model");
 const Role = require("../models/role.model");
 const mongoose = require("mongoose");
 const fs = require("fs");
+const userModel = require("../models/user.model");
 module.exports = {
   authenticate,
   refreshToken,
@@ -63,15 +64,15 @@ async function createUser({
 async function editUser({
   id,
   username,
-  password,
   firstName,
   lastName,
   role,
   status,
 }) {
-  const roleQuery = await Role.findById(role);
-  var userQuery = await getById(id);
-  // console.log(userQuery,'userQuery');
+  const roleQuery = await Role.findOne({name: role});
+  // var userQuery = await userModel.findById(id);
+  
+  // return;
   // if (roleQuery && userQuery) {
   var update = {
     username: username,
@@ -80,10 +81,11 @@ async function editUser({
     role: roleQuery.name,
     status: status,
 
-    passwordHash:
-      password && password.length
-        ? bcrypt.hashSync(password, 10)
-        : userQuery.passwordHash,
+    // passwordHash:
+    //   // password && password.length
+    //   //   ? bcrypt.hashSync(password, 10)
+    //     // : 
+    //     userQuery.passwordHash,
   };
   try {
     let result = await User.findByIdAndUpdate(id, update, { new: true });

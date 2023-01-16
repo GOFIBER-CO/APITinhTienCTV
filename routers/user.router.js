@@ -518,7 +518,9 @@ router.delete(
   deleteAvatar
 );
 router.patch("/user/editAvatar", authorize(), editAvatar);
-router.patch("/user/editProfile", authorize(), editProfile);
+router.patch("/user/editProfile"
+// , authorize()
+, editProfile);
 
 /**
  * @swagger
