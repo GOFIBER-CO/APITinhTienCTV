@@ -44,7 +44,7 @@ async function createUser({
   status,
 }) {
   const userQuery = await User.findOne({ username });
-  const roleQuery = await Role.findById(role);
+  const roleQuery = await Role.findOne({name: role});
   if (!userQuery && roleQuery) {
     let user = new User({
       firstName: firstName,
