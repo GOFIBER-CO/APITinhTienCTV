@@ -10,7 +10,7 @@ const domainSchema = new mongoose.Schema(
     },
     total: {
       type: Number,
-      
+
       min: 0,
       default: 0,
     },
@@ -18,6 +18,11 @@ const domainSchema = new mongoose.Schema(
       type: ObjectId,
       require: true,
       ref: "Team",
+    },
+    brand: {
+      type: ObjectId,
+      require: true,
+      ref: "brands",
     },
   },
   { timestamps: true }

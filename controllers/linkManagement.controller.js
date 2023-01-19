@@ -176,7 +176,6 @@ const create = async (req, res) => {
     const newBrand = {
       total: Number(brand?.total || 0) + newTotal,
     };
-
     const updateCollaborator = Collaborator.updateOne(
       {
         _id: collaborator?._id,
@@ -543,6 +542,20 @@ const getStatisticByBrand = async (req, res) => {
       },
     },
   ]);
+
+  // Promise.all(
+  //   data?.map(async (brand) => {
+  //     let total = 0;
+  //     brand?.team?.map((team) => {
+  //       total = total + team?.total;
+  //     });
+  //     if (brand?.total !== total) {
+  //       brand.total = total;
+  //       await Brand.findByIdAndUpdate(brand?.id, { total: total });
+  //     }
+  //   })
+  // );
+
   return res.status(200).json({ success: true, data });
 };
 const getStatisticByTeam = async (req, res) => {
@@ -635,6 +648,7 @@ const getStatisticByTeam = async (req, res) => {
   ]);
   return res.status(200).json({ success: true, data });
 };
+const checkTotal = (parent, children) => {};
 
 module.exports = {
   search,

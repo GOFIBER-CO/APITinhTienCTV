@@ -58,6 +58,7 @@ const search = async (pageSize = 10, pageIndex = 1, search = "") => {
       .skip(pageSize * pageIndex - pageSize)
       .limit(parseInt(pageSize))
       .populate("team")
+      .populate("brand")
       .sort({
         createdAt: "DESC",
       });
