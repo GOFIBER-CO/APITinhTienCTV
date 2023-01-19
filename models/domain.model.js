@@ -22,7 +22,7 @@ const domainSchema = new mongoose.Schema(
     brand: {
       type: ObjectId,
       require: true,
-      ref: "brands",
+      ref: "Brand",
     },
   },
   { timestamps: true }

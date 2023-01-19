@@ -16,6 +16,7 @@ const search = async (req, res) => {
 
     return res.status(200).json(data);
   } catch (error) {
+    console.log(error,'error');
     let response = new ResponseModel(400, error.message, error);
     res.status(400).json(response);
   }
