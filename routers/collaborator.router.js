@@ -10,6 +10,8 @@ const {
   getCollaboratorsByDomainId,
   getAllCollaboratorsByDomainId,
   getCollaboratorsByBrand,
+  getCollaboratorsByTeamId,
+  getCollaboratorsByBrandId,
 } = require("../controllers/collaborator.controller");
 const Role = require("../helpers/role");
 
@@ -21,6 +23,11 @@ router.delete("/collaborators/remove/:id", remove);
 router.get(
   "/collaborators/getCollaboratorsByDomainId",
   getCollaboratorsByDomainId
+);
+router.get("/collaborators/getCollaboratorsByTeamId", getCollaboratorsByTeamId);
+router.get(
+  "/collaborators/getCollaboratorsByBrandId",
+  getCollaboratorsByBrandId
 );
 router.get(
   "/collaborators/getAllCollaboratorsByDomainId/:domainId",
