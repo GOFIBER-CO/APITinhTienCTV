@@ -9,6 +9,7 @@ const {
 } = require("../services/domain.service");
 const { getTeamByBrand } = require("./team.controller");
 const teamController = require("./team.controller");
+const Domain = require("../models/domain.model");
 
 const NAME = "Collaborator";
 
@@ -170,27 +171,27 @@ const getCollaboratorsByDomainId = async (req, res) => {
 };
 
 //get ctv theo teamId
-const getCollaboratorsByTeamId = async (req, res) => {
+const getAllCollaboratorsByTeamId = async (req, res) => {
   try {
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
     const { teamId } = req.query;
     //get domain by teamid
-    const listDomainByTeam = await getAllDomainsByTeamId(teamId);
-    //get list CTV by domain_id
-    const listCTV = listDomainByTeam?.data?.map(async (item) => {
-      const dataCTV = await Collaborator.find({ domain_id: item?._id });
-      return dataCTV;
-    });
-    Promise.all(listCTV).then((result) => {
-      //handle result gộp tất cả các array thành 1 array
-      const totalCTV = [];
-      result?.map((item) => {
-        item?.map((itemChild) => totalCTV.push(itemChild));
-      });
-      res.status(200).json(totalCTV);
-    });
+    const listDomainByTeam = await Domain.find({ team: teamId });
+    const listIdDomain = listDomainByTeam?.map((item) => item?._id);
+    // lấy danh sách CTV theo danh sách id domain đã filter ở trên
+
+    const listCTV = await Collaborator.find({
+      domain_id: listIdDomain,
+      name: {
+        $regex: ".*" + search + ".*",
+        $options: "i",
+      },
+    })
+      .skip(Number(pageIndex) * Number(pageSize) - Number(pageSize))
+      .limit(Number(pageSize));
+    res.status(200).json(listCTV);
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
     return res.status(400).json({
@@ -200,7 +201,7 @@ const getCollaboratorsByTeamId = async (req, res) => {
 };
 
 //get CTV by brandId
-const getCollaboratorsByBrandId = async (req, res) => {
+const getAllCollaboratorsByBrandId = async (req, res) => {
   try {
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
@@ -208,38 +209,22 @@ const getCollaboratorsByBrandId = async (req, res) => {
     const { brandId } = req.query;
 
     //get all team by brandId
-    const listTeam = await Team.find({ brand: brandId });
-
+    const listTeam = await Team.find({ brand: brandId }).select("_id");
+    const listIdTeam = listTeam?.map((item) => item?._id);
     //get domain by teamid
-    const listDomainByTeamPr = listTeam?.map(
-      async (teamItem) => await getAllDomainsByTeamId(teamItem?._id)
-    );
-
-    Promise.all(listDomainByTeamPr).then(async (listDomainByTeam) => {
-      // duyệt qua từng domain
-      const listCTVPromise = listDomainByTeam?.map(async (domain) => {
-        const tempData = domain?.data?.map(async (itemChild) => {
-          //tim list ctv trong domain
-          return await Collaborator.find({
-            domain_id: itemChild?._id,
-          });
-        });
-        return Promise.all(tempData).then((CTVofDomain) => CTVofDomain);
-      });
-      Promise.all(listCTVPromise).then((result) => {
-        const listCTVByBrand = [];
-        result?.map((item) => {
-          //item là domain by team
-          item?.map((itemCTVByDomain) => {
-            itemCTVByDomain?.map((itemCTV) => listCTVByBrand.push(itemCTV));
-          });
-        });
-        res.status(200).json(listCTVByBrand);
-      });
-      // console.log(result);
-      // res.status(200).json(result);
-    });
-    //get list CTV by domain_id
+    const listDomainByTeam = await Domain.find({ team: listIdTeam });
+    const listIdDomain = listDomainByTeam?.map((item) => item?._id);
+    // lấy danh sách CTV theo danh sách id domain đã filter ở trên
+    const listCTV = await Collaborator.find({
+      domain_id: listIdDomain,
+      name: {
+        $regex: ".*" + search + ".*",
+        $options: "i",
+      },
+    })
+      .skip(Number(pageIndex) * Number(pageSize) - Number(pageSize))
+      .limit(Number(pageSize));
+    res.status(200).json(listCTV);
   } catch (error) {
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
     return res.status(400).json({
@@ -282,6 +267,6 @@ module.exports = {
   getCollaboratorsByDomainId,
   getAllCollaboratorsByDomainId,
   getCollaboratorsByBrand,
-  getCollaboratorsByTeamId,
-  getCollaboratorsByBrandId,
+  getAllCollaboratorsByTeamId,
+  getAllCollaboratorsByBrandId,
 };

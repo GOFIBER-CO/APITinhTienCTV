@@ -9,6 +9,9 @@ const {
   search,
   getLinkManagementsByCollaboratorId,
   getStatisticByBrand,
+  getLinkManagementsByDomainId,
+  getLinkManagementsByTeamId,
+  getLinkManagementsByBrandId,
 } = require("../controllers/linkManagement.controller");
 const Role = require("../helpers/role");
 
@@ -26,6 +29,21 @@ router.get(
   "/link-managements/getStatisticByBrand",
   authorize(),
   getStatisticByBrand
+);
+router.get(
+  "/link-managements/getLinkManagementsByDomainId",
+  // authorize(),
+  getLinkManagementsByDomainId
+);
+router.get(
+  "/link-managements/getLinkManagementsByTeamId",
+  // authorize(),
+  getLinkManagementsByTeamId
+);
+router.get(
+  "/link-managements/getLinkManagementsByBrandId",
+  // authorize(),
+  getLinkManagementsByBrandId
 );
 
 module.exports = router;

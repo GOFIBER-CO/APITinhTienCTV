@@ -10,8 +10,8 @@ const {
   getCollaboratorsByDomainId,
   getAllCollaboratorsByDomainId,
   getCollaboratorsByBrand,
-  getCollaboratorsByTeamId,
-  getCollaboratorsByBrandId,
+  getAllCollaboratorsByTeamId,
+  getAllCollaboratorsByBrandId,
 } = require("../controllers/collaborator.controller");
 const Role = require("../helpers/role");
 
@@ -24,10 +24,13 @@ router.get(
   "/collaborators/getCollaboratorsByDomainId",
   getCollaboratorsByDomainId
 );
-router.get("/collaborators/getCollaboratorsByTeamId", getCollaboratorsByTeamId);
 router.get(
-  "/collaborators/getCollaboratorsByBrandId",
-  getCollaboratorsByBrandId
+  "/collaborators/getAllCollaboratorsByTeamId",
+  getAllCollaboratorsByTeamId
+);
+router.get(
+  "/collaborators/getAllCollaboratorsByBrandId",
+  getAllCollaboratorsByBrandId
 );
 router.get(
   "/collaborators/getAllCollaboratorsByDomainId/:domainId",

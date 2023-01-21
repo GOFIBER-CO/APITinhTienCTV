@@ -455,6 +455,118 @@ const getLinkManagementsByCollaboratorId = async (req, res) => {
     });
   }
 };
+
+const getLinkManagementsByDomainId = async (req, res) => {
+  try {
+    const { domainId } = req.query;
+
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
+    const listIdLink = [];
+    const allCTVByDomain = await Collaborator.find({
+      domain_id: domainId,
+    }).select("link_management_ids");
+    allCTVByDomain?.map((item) => {
+      item?.link_management_ids?.map((itemLink) => listIdLink.push(itemLink));
+    });
+    const result = await LinkManagement.find({
+      _id: listIdLink,
+      title: {
+        $regex: ".*" + search + ".*",
+        $options: "i",
+      },
+    })
+      .skip(Number(pageIndex) * Number(pageSize) - Number(pageSize))
+      .limit(Number(pageSize));
+
+    return res.status(200).json(result);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
+const getLinkManagementsByTeamId = async (req, res) => {
+  try {
+    const { teamId } = req.query;
+
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
+    const listDomain = await Domain.find({ team: teamId }).select("_id");
+    //xử lý list để lấy list id
+    const listIdDomain = listDomain?.map((item) => item?._id);
+    const listIdLink = [];
+    const allCTVByDomain = await Collaborator.find({
+      domain_id: listIdDomain,
+    }).select("link_management_ids");
+    allCTVByDomain?.map((item) => {
+      item?.link_management_ids?.map((itemLink) => listIdLink.push(itemLink));
+    });
+    const result = await LinkManagement.find({
+      _id: listIdLink,
+      title: {
+        $regex: ".*" + search + ".*",
+        $options: "i",
+      },
+    })
+      .skip(Number(pageIndex) * Number(pageSize) - Number(pageSize))
+      .limit(Number(pageSize));
+
+    return res.status(200).json(result);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
+const getLinkManagementsByBrandId = async (req, res) => {
+  try {
+    const { brandId } = req.query;
+
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
+    //lấy list team thuộc brand
+    const listTeamOfBrand = await Team.find({ brand: brandId }).select("_id");
+    const listIdTeam = listTeamOfBrand?.map((item) => item?._id);
+    //lấy list domain thuộc team
+    const listDomainOfBrand = await Domain.find({ team: listIdTeam }).select(
+      "_id"
+    );
+    //lấy list ctv thuộc domain
+    const listIdDomain = listDomainOfBrand?.map((item) => item?._id);
+    const listIdLink = [];
+    const allCTVByDomain = await Collaborator.find({
+      domain_id: listIdDomain,
+    }).select("link_management_ids");
+    allCTVByDomain?.map((item) => {
+      item?.link_management_ids?.map((itemLink) => listIdLink.push(itemLink));
+    });
+    const result = await LinkManagement.find({
+      _id: listIdLink,
+      title: {
+        $regex: ".*" + search + ".*",
+        $options: "i",
+      },
+    })
+      .skip(Number(pageIndex) * Number(pageSize) - Number(pageSize))
+      .limit(Number(pageSize));
+
+    return res.status(200).json(result);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 const getStatisticByBrand = async (req, res) => {
   const pageSize = Number(req.query?.pageSize) || 10;
   const pageIndex = Number(req.query?.pageIndex) || 1;
@@ -658,4 +770,7 @@ module.exports = {
   getById,
   getLinkManagementsByCollaboratorId,
   getStatisticByBrand,
+  getLinkManagementsByDomainId,
+  getLinkManagementsByTeamId,
+  getLinkManagementsByBrandId,
 };
