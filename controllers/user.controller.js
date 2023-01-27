@@ -3,6 +3,8 @@ const Joi = require("joi");
 const validateRequest = require("../middleware/validate-request");
 const Role = require("../helpers/role");
 const userModel = require("../models/user.model");
+const User = require("../models/user.model");
+const PagedModel = require("../models/PagedModel");
 
 async function signup(req, res) {
   
@@ -171,18 +173,56 @@ function revokeToken(req, res, next) {
     .catch(next);
 }
 
-function getAll(req, res, next) {
-  console.log(req.query, 'asdsad');
+async function getAll(req, res, next) {
+
   const search = req.query?.search || "";
   // return;
-  try {
-    userService
-      .getAll(search)
-      .then((users) => res.json(users))
-      .catch((error) => res.json(error));
-  } catch (err) {
-    res.status(500).json(error);
+  // try {
+  //   userService
+  //     .getAll(search)
+  //     .then((users) => res.json(users))
+  //     .catch((error) => res.json(error));
+  // } catch (err) {
+  //   res.status(500).json(error);
+  // }
+
+  let pageSize = req.query.pageSize || 10;
+  let pageIndex = req.query.pageIndex || 1;
+  let searchObj = {};
+
+  if (req.query.search) {
+    searchObj = {
+     
+      username: { $regex: ".*" + req.query.search + ".*" },
+        
+    };
   }
+ 
+  try {
+    let data = await User
+    .find(searchObj)
+      .skip(pageSize * pageIndex - pageSize)
+      .limit(parseInt(pageSize))
+      .populate("role")
+      .sort({
+        createdTime: "desc",
+      });
+
+    let count = await User.find(searchObj).countDocuments();
+    let totalPages = Math.ceil(count / pageSize);
+    let pagedModel = new PagedModel(
+      pageIndex,
+      pageSize,
+      totalPages,
+      data,
+      count
+    );
+    res.json(pagedModel);
+  } catch (error) {
+    let response = new ResponseModel(404, error.message, error);
+    res.status(404).json(response);
+  }
+
 }
 
 function getById(req, res, next) {
