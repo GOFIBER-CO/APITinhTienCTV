@@ -163,6 +163,8 @@ const getAllCollaboratorsByDomainId = async (domainId) => {
 
 const getCollaboratorsByDomainId = async (
   domainId = "",
+  team = "",
+  brand = "",
   pageIndex = 1,
   pageSize = 10,
   search = ""
@@ -176,9 +178,69 @@ const getCollaboratorsByDomainId = async (
           },
         },
       },
+      
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain_id",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $lookup: {
+                from: "teams",
+                localField: "team",
+                foreignField: "_id",
+                pipeline: [],
+                as: "team",
+              },
+            },
+            {
+              $unwind: "$team",
+            },
+          ],
+          as: "domain",
+        },
+      },
+      {
+        $unwind: "$domain",
+      },
+      {
+        $set: {
+          link_ids: {
+            $map: {
+              input: "$domain.team.brand",
+              as: "item",
+              in: {
+                $toString: "$$item",
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          teamId: {
+            $toString: "$domain.team._id",
+          },
+        },
+      },
       {
         $match: {
-          domainId,
+          link_ids: { $elemMatch: { $in: [brand] } },
+          ...(team
+            ? {
+                teamId: team,
+              }
+            : {}),
+          ...(domainId
+            ? {
+                domainId,
+              }
+            : {}),
+        },
+      },
+      {
+        $match: {
           ...(search
             ? {
                 $or: [
@@ -212,14 +274,6 @@ const getCollaboratorsByDomainId = async (
         },
       },
       {
-        $lookup: {
-          from: "domains",
-          localField: "domain_id",
-          foreignField: "_id",
-          as: "domain",
-        },
-      },
-      {
         $sort: {
           createdAt: -1,
         },
@@ -232,26 +286,118 @@ const getCollaboratorsByDomainId = async (
       },
     ]);
 
-    const count = await Collaborator.find({
-      domain_id: domainId,
-      ...(search
-        ? {
-            name: {
-              $regex: ".*" + search + ".*",
-              $options: "i",
+    const count = await Collaborator.aggregate([
+      {
+        $addFields: {
+          domainId: {
+            $toString: "$domain_id",
+          },
+        },
+      },
+      
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain_id",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $lookup: {
+                from: "teams",
+                localField: "team",
+                foreignField: "_id",
+                pipeline: [],
+                as: "team",
+              },
             },
-          }
-        : {}),
-    }).countDocuments();
+            {
+              $unwind: "$team",
+            },
+          ],
+          as: "domain",
+        },
+      },
+      {
+        $unwind: "$domain",
+      },
+      {
+        $set: {
+          link_ids: {
+            $map: {
+              input: "$domain.team.brand",
+              as: "item",
+              in: {
+                $toString: "$$item",
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          teamId: {
+            $toString: "$domain.team._id",
+          },
+        },
+      },
+      {
+        $match: {
+          link_ids: { $elemMatch: { $in: [brand] } },
+          ...(team
+            ? {
+                teamId: team,
+              }
+            : {}),
+          ...(domainId
+            ? {
+                domainId,
+              }
+            : {}),
+        },
+      },
+      {
+        $match: {
+          ...(search
+            ? {
+                $or: [
+                  {
+                    name: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    bank_name: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    stk: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    account_holder: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                ],
+              }
+            : {}),
+        },
+      },
+    ]);
 
-    let totalPages = Math.ceil(count / pageSize);
+    let totalPages = Math.ceil(count?.length / pageSize);
 
     return {
       pageIndex,
       pageSize,
       data,
-      count,
-      domainId,
+      count: count?.length || 0,
       totalPages,
     };
   } catch (error) {

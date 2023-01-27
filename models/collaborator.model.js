@@ -59,6 +59,11 @@ const CollaboratorSchema = new mongoose.Schema(
         ref: "LinkManagement",
       },
     ],
+    // brand_id: {
+    //   type: ObjectId,
+    //   // require: true,
+    //   ref: "Brand",
+    // },
   },
   {
     timestamps: true,

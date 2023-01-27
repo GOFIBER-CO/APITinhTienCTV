@@ -122,5 +122,15 @@ class TeamController {
       return res.status(500).json({ success: false, message: error });
     }
   }
+  async getAll(req, res) {
+    try {
+      const brand = req.params.brand || "";
+      const data = await Team.find().populate("brand");
+      return res.status(200).json({ success: true, data });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ success: false, message: error });
+    }
+  }
 }
 module.exports = new TeamController();

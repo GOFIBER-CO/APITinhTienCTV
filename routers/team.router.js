@@ -14,5 +14,10 @@ router.get(
   authorize(),
   teamController.getTeamByBrand
 );
+router.get(
+  "/teams/getAll",
+  authorize(),
+  teamController.getAll
+);
 
 module.exports = router;

@@ -10,6 +10,7 @@ const {
 const { getTeamByBrand } = require("./team.controller");
 const teamController = require("./team.controller");
 const Domain = require("../models/domain.model");
+const PagedModel = require("../models/PagedModel");
 
 const NAME = "Collaborator";
 
@@ -148,14 +149,18 @@ const getAllCollaboratorsByDomainId = async (req, res) => {
 
 const getCollaboratorsByDomainId = async (req, res) => {
   try {
-    const { domainId } = req.query;
+    const {brand, domainId, team } = req.query;
+
 
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
 
     const data = await CollaboratorService.getCollaboratorsByDomainId(
+      
       domainId,
+      team,
+      brand,
       pageIndex,
       pageSize,
       search
