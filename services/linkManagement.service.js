@@ -105,107 +105,174 @@ const getById = async (id) => {
 };
 
 const getAllLinkManagementsByCollaboratorId = async (
-  collaboratorId,
+  domainId = "",
+      team = "",
+      brand = "",
+      colad = "",
   pageIndex = 1,
   pageSize = 10,
   search = ""
 ) => {
   try {
-    const result = await Collaborator.aggregate([
+    const data = await LinkManagement.aggregate([
       {
         $addFields: {
-          id: {
+          coladId: {
             $toString: "$_id",
           },
         },
       },
       {
-        $match: {
-          id: collaboratorId,
-        },
-      },
-      {
-        $set: {
-          link_management_id: {
-            $map: {
-              input: "$link_management_ids",
-              as: "item",
-              in: {
-                $toObjectId: "$$item",
-              },
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "linkmanagements",
-          localField: "link_management_id",
+        $lookup:{
+          from:"collaborators",
+          localField:"_id",
           foreignField: "_id",
-          pipeline: [
-            {
-              $match: {
-                ...(search
-                  ? {
-                      $or: [
-                        {
-                          title: {
-                            $regex: ".*" + search + ".*",
-                            $options: "i",
-                          },
-                        },
-                        {
-                          keyword: {
-                            $regex: ".*" + search + ".*",
-                            $options: "i",
-                          },
-                        },
-                      ],
-                    }
-                  : {}),
-              },
-            },
-            {
-              $sort: {
-                createdAt: -1,
-              },
-            },
+          pipeline:[
+            // {
+            //   $lookup:{
+            //     from:"teams",
+            //     localField: "team",
+            //     foreignField: "_id",
+            //     pipeline:[],
+            //     as :"team"
+            //   }
+            // }
           ],
-          as: "linkManagements",
-        },
+          as : "collaborator"
+        }
       },
-      {
-        $addFields: {
-          count: {
-            $size: "$linkManagements",
-          },
-        },
-      },
-      {
-        $project: {
-          data: {
-            $slice: [
-              "$linkManagements",
-              pageIndex * pageSize - pageSize,
-              pageIndex * pageSize,
-            ],
-          },
-          count: 1,
-        },
-      },
+      // {
+      //   $unwind: "$domain"
+      // },
+      // {
+      //   $set: {
+      //     link_ids: {
+      //       $map: {
+      //         input: "$domain.team.brand",
+      //         as: "item",
+      //         in: {
+      //           $toString: "$$item",
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+      // {
+      //   $addFields: {
+      //     teamId: {
+      //       $toString: "$domain.team._id",
+      //     },
+      //   },
+      // },
+      // {
+      //   $match: {
+      //     link_ids: { $elemMatch: { $in: [brand] } },
+      //     ...(team
+      //       ? {
+      //           teamId: team,
+      //         }
+      //       : {}),
+      //     ...(domainId
+      //       ? {
+      //           domainId,
+      //         }
+      //       : {}),
+      //   },
+      // },
     ]);
-
-    let count = result[0]?.count || 0;
-    let totalPages = Math.ceil(count / pageSize);
-
     return {
-      pageIndex,
-      pageSize,
-      collaboratorId: result[0]?._id,
-      count,
-      totalPages,
-      data: result[0]?.data || [],
-    };
+      data
+    }
+    // const data = await Collaborator.aggregate([
+      
+      // {
+      //   $match: {
+      //     id: collaboratorId,
+      //   },
+      // },
+      // {
+      //   $set: {
+      //     link_management_id: {
+      //       $map: {
+      //         input: "$link_management_ids",
+      //         as: "item",
+      //         in: {
+      //           $toObjectId: "$$item",
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+      // {
+      //   $lookup: {
+      //     from: "linkmanagements",
+      //     localField: "link_management_id",
+      //     foreignField: "_id",
+      //     pipeline: [
+      //       {
+      //         $match: {
+      //           ...(search
+      //             ? {
+      //                 $or: [
+      //                   {
+      //                     title: {
+      //                       $regex: ".*" + search + ".*",
+      //                       $options: "i",
+      //                     },
+      //                   },
+      //                   {
+      //                     keyword: {
+      //                       $regex: ".*" + search + ".*",
+      //                       $options: "i",
+      //                     },
+      //                   },
+      //                 ],
+      //               }
+      //             : {}),
+      //         },
+      //       },
+      //       {
+      //         $sort: {
+      //           createdAt: -1,
+      //         },
+      //       },
+      //     ],
+      //     as: "linkManagements",
+      //   },
+      // },
+      // {
+      //   $addFields: {
+      //     count: {
+      //       $size: "$linkManagements",
+      //     },
+      //   },
+      // },
+      // {
+      //   $project: {
+      //     data: {
+      //       $slice: [
+      //         "$linkManagements",
+      //         pageIndex * pageSize - pageSize,
+      //         pageIndex * pageSize,
+      //       ],
+      //     },
+      //     count: 1,
+      //   },
+      // },
+    // ]);
+
+    // let count = result[0]?.count || 0;
+    // let totalPages = Math.ceil(count / pageSize);
+
+    // return {
+      // pageIndex,
+      // pageSize,
+      // collaboratorId: result[0]?._id,
+      // count,
+      // totalPages,
+      // data
+      // : result[0]?.data || [],
+    // };
   } catch (error) {
     throw error;
   }

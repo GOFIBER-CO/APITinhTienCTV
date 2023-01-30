@@ -205,6 +205,20 @@ const getAllCollaboratorsByTeamId = async (req, res) => {
   }
 };
 
+//get CTV by domain
+const getAllCollaboratorsByDomain = async (req, res) => {
+  try {
+    const domain = req.query.domain || "";
+    const data = await Collaborator.find({
+      domain_id: domain,
+    });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: error });
+  }
+};
+
 //get CTV by brandId
 const getAllCollaboratorsByBrandId = async (req, res) => {
   try {
@@ -274,4 +288,5 @@ module.exports = {
   getCollaboratorsByBrand,
   getAllCollaboratorsByTeamId,
   getAllCollaboratorsByBrandId,
+  getAllCollaboratorsByDomain,
 };

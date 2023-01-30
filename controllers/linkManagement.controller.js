@@ -434,14 +434,17 @@ const remove = async (req, res) => {
 
 const getLinkManagementsByCollaboratorId = async (req, res) => {
   try {
-    const { collaboratorId } = req.query;
+    const { brand, domainId, team, colad } = req.query;
 
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
     const data =
       await LinkManagementService.getAllLinkManagementsByCollaboratorId(
-        collaboratorId,
+        domainId,
+      team,
+      brand,
+      colad,
         pageIndex,
         pageSize,
         search
