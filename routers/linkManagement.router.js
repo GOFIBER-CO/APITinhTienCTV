@@ -12,6 +12,7 @@ const {
   getLinkManagementsByDomainId,
   getLinkManagementsByTeamId,
   getLinkManagementsByBrandId,
+  getLinkManagementsByTeamUser
 } = require("../controllers/linkManagement.controller");
 const Role = require("../helpers/role");
 
@@ -44,6 +45,11 @@ router.get(
   "/link-managements/getLinkManagementsByBrandId",
   // authorize(),
   getLinkManagementsByBrandId
+);
+router.get(
+  "/link-managements/getLinkManagementsByTeamUser",
+  // authorize(),
+  getLinkManagementsByTeamUser
 );
 
 module.exports = router;

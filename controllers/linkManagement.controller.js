@@ -434,7 +434,7 @@ const remove = async (req, res) => {
 
 const getLinkManagementsByCollaboratorId = async (req, res) => {
   try {
-    const { brand, domainId, team, colad } = req.query;
+    const { brand, domainId, team, coladId } = req.query;
 
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
@@ -444,7 +444,7 @@ const getLinkManagementsByCollaboratorId = async (req, res) => {
         domainId,
       team,
       brand,
-      colad,
+      coladId,
         pageIndex,
         pageSize,
         search
@@ -491,6 +491,25 @@ const getLinkManagementsByDomainId = async (req, res) => {
     });
   }
 };
+
+const getLinkManagementsByTeamUser = async (req, res) =>{
+  try {
+    const {teamId} = req.query;
+    const listDomain = await Domain.find({ team: teamId }).select("_id");
+    //xử lý list để lấy list id
+    const listIdDomain = listDomain?.map((item) => item?._id);
+    const data = await Collaborator.find({
+      domain_id: listIdDomain,
+    })
+
+    return res.status(200).json(data);
+  } catch (error) {
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+}
 
 const getLinkManagementsByTeamId = async (req, res) => {
   try {
@@ -776,4 +795,5 @@ module.exports = {
   getLinkManagementsByDomainId,
   getLinkManagementsByTeamId,
   getLinkManagementsByBrandId,
+  getLinkManagementsByTeamUser
 };
