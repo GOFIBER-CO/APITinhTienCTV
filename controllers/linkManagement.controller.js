@@ -11,6 +11,7 @@ const { PRICE, LINK_STATUS, genFieldsRequire } = require("../helpers");
 const Domain = require("../models/domain.model");
 const Brand = require("../models/brand.model");
 const Team = require("../models/team.model");
+const { default: mongoose } = require("mongoose");
 const NAME = "Link Management";
 
 const search = async (req, res) => {
@@ -630,9 +631,6 @@ const getStatisticByBrand = async (req, res) => {
               foreignField: "team",
               pipeline: [
                 {
-                  $match: { brand: null },
-                },
-                {
                   $lookup: {
                     from: "collaborators",
                     localField: "_id",
@@ -655,6 +653,7 @@ const getStatisticByBrand = async (req, res) => {
             },
           },
         ],
+
         as: "team",
       },
     },

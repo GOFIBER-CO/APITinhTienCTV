@@ -119,10 +119,18 @@ class TeamController {
   }
   async getTeamByBrand(req, res) {
     try {
+      const pageSize = req.query.pageSize || 10;
+      const pageIndex = req.query.pageIndex || 1;
       const brand = req.params.brand || "";
       const data = await Team.find({
         brand: brand.toString(),
-      }).populate("brand");
+      })
+        .populate("brand")
+        .skip(pageSize * pageIndex - pageSize)
+        .limit(parseInt(pageSize))
+        .sort({
+          createdAt: "-1",
+        });
       return res.status(200).json({ success: true, data });
     } catch (error) {
       console.log(error);
