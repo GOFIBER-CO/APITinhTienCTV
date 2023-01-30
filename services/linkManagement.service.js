@@ -108,7 +108,7 @@ const getAllLinkManagementsByCollaboratorId = async (
   domainId = "",
       team = "",
       brand = "",
-      colad = "",
+      coladId = "",
   pageIndex = 1,
   pageSize = 10,
   search = ""
@@ -126,153 +126,249 @@ const getAllLinkManagementsByCollaboratorId = async (
         $lookup:{
           from:"collaborators",
           localField:"_id",
-          foreignField: "_id",
+          foreignField: "link_management_ids",
           pipeline:[
-            // {
-            //   $lookup:{
-            //     from:"teams",
-            //     localField: "team",
-            //     foreignField: "_id",
-            //     pipeline:[],
-            //     as :"team"
-            //   }
-            // }
+            {
+              $lookup:{
+                from:"domains",
+                localField: "domain_id",
+                foreignField: "_id",
+                pipeline:[
+                  {
+                    $lookup:{
+                      from: "teams",
+                      localField:"team",
+                      foreignField:"_id",
+                      pipeline:[],
+                      as:"team",
+                    },
+                  },
+                  {
+                    $unwind:"$team"
+                  },
+                ],
+                as :"domain"
+              },
+             
+            },
+            {
+              $unwind: "$domain"
+            }
           ],
           as : "collaborator"
         }
       },
-      // {
-      //   $unwind: "$domain"
-      // },
-      // {
-      //   $set: {
-      //     link_ids: {
-      //       $map: {
-      //         input: "$domain.team.brand",
-      //         as: "item",
-      //         in: {
-      //           $toString: "$$item",
-      //         },
-      //       },
-      //     },
-      //   },
-      // },
-      // {
-      //   $addFields: {
-      //     teamId: {
-      //       $toString: "$domain.team._id",
-      //     },
-      //   },
-      // },
-      // {
-      //   $match: {
-      //     link_ids: { $elemMatch: { $in: [brand] } },
-      //     ...(team
-      //       ? {
-      //           teamId: team,
-      //         }
-      //       : {}),
-      //     ...(domainId
-      //       ? {
-      //           domainId,
-      //         }
-      //       : {}),
-      //   },
-      // },
+      {
+        $unwind: "$collaborator"
+      },
+      {
+        $set:{
+          colad_ids: {
+            $map: {
+              input: "$collaborator.domain.team.brand",
+              as: "item",
+              in:{
+                $toString: "$$item"
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          teamId: {
+            $toString: "$collaborator.domain.team._id",
+          },
+          domain_id: {
+            $toString:"$collaborator.domain._id"
+          },
+          colad_id: {
+            $toString: "$collaborator._id"
+          }
+        },
+      },
+      {
+        $match:{
+          colad_ids: {$elemMatch : { $in : [brand] }},
+          ...(team
+            ?{
+              teamId : team,
+            }: {}),
+          ...(domainId
+            ?{
+              domain_id: domainId
+            }:{}),
+          ...(coladId
+            ?{colad_id : coladId
+            }:{}),
+        }
+      },
+      {
+        $match: {
+          ...(search
+            ? {
+                $or: [
+                  {
+                    title: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    keyword: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  
+                ],
+              }
+            : {}),
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize) || 9999999,
+      },
     ]);
+    const count = await LinkManagement.aggregate([
+      {
+        $addFields: {
+          coladId: {
+            $toString: "$_id",
+          },
+        },
+      },
+      {
+        $lookup:{
+          from:"collaborators",
+          localField:"_id",
+          foreignField: "link_management_ids",
+          pipeline:[
+            {
+              $lookup:{
+                from:"domains",
+                localField: "domain_id",
+                foreignField: "_id",
+                pipeline:[
+                  {
+                    $lookup:{
+                      from: "teams",
+                      localField:"team",
+                      foreignField:"_id",
+                      pipeline:[],
+                      as:"team",
+                    },
+                  },
+                  {
+                    $unwind:"$team"
+                  },
+                ],
+                as :"domain"
+              },
+             
+            },
+            {
+              $unwind: "$domain"
+            }
+          ],
+          as : "collaborator"
+        }
+      },
+      {
+        $unwind: "$collaborator"
+      },
+      {
+        $set:{
+          colad_ids: {
+            $map: {
+              input: "$collaborator.domain.team.brand",
+              as: "item",
+              in:{
+                $toString: "$$item"
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          teamId: {
+            $toString: "$collaborator.domain.team._id",
+          },
+          domain_id: {
+            $toString:"$collaborator.domain._id"
+          },
+          colad_id: {
+            $toString: "$collaborator._id"
+          }
+        },
+      },
+      {
+        $match:{
+          colad_ids: {$elemMatch : { $in : [brand] }},
+          ...(team
+            ?{
+              teamId : team,
+            }: {}),
+          ...(domainId
+            ?{
+              domain_id: domainId
+            }:{}),
+          ...(coladId?{colad_id : coladId}:{}),
+        }
+      },
+      {
+        $match: {
+          ...(search
+            ? {
+                $or: [
+                  {
+                    title: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    keyword: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  
+                ],
+              }
+            : {}),
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize) || 9999999,
+      },
+    ]);
+    let totalPages = Math.ceil(count?.length / pageSize);
     return {
-      data
+      pageIndex,
+      pageSize,
+      data,
+      count: count?.length || 0,
+      totalPages,
     }
-    // const data = await Collaborator.aggregate([
-      
-      // {
-      //   $match: {
-      //     id: collaboratorId,
-      //   },
-      // },
-      // {
-      //   $set: {
-      //     link_management_id: {
-      //       $map: {
-      //         input: "$link_management_ids",
-      //         as: "item",
-      //         in: {
-      //           $toObjectId: "$$item",
-      //         },
-      //       },
-      //     },
-      //   },
-      // },
-      // {
-      //   $lookup: {
-      //     from: "linkmanagements",
-      //     localField: "link_management_id",
-      //     foreignField: "_id",
-      //     pipeline: [
-      //       {
-      //         $match: {
-      //           ...(search
-      //             ? {
-      //                 $or: [
-      //                   {
-      //                     title: {
-      //                       $regex: ".*" + search + ".*",
-      //                       $options: "i",
-      //                     },
-      //                   },
-      //                   {
-      //                     keyword: {
-      //                       $regex: ".*" + search + ".*",
-      //                       $options: "i",
-      //                     },
-      //                   },
-      //                 ],
-      //               }
-      //             : {}),
-      //         },
-      //       },
-      //       {
-      //         $sort: {
-      //           createdAt: -1,
-      //         },
-      //       },
-      //     ],
-      //     as: "linkManagements",
-      //   },
-      // },
-      // {
-      //   $addFields: {
-      //     count: {
-      //       $size: "$linkManagements",
-      //     },
-      //   },
-      // },
-      // {
-      //   $project: {
-      //     data: {
-      //       $slice: [
-      //         "$linkManagements",
-      //         pageIndex * pageSize - pageSize,
-      //         pageIndex * pageSize,
-      //       ],
-      //     },
-      //     count: 1,
-      //   },
-      // },
-    // ]);
-
-    // let count = result[0]?.count || 0;
-    // let totalPages = Math.ceil(count / pageSize);
-
-    // return {
-      // pageIndex,
-      // pageSize,
-      // collaboratorId: result[0]?._id,
-      // count,
-      // totalPages,
-      // data
-      // : result[0]?.data || [],
-    // };
+    
   } catch (error) {
     throw error;
   }
