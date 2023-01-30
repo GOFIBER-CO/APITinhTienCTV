@@ -98,22 +98,30 @@ const update = async (req, res) => {
   }
 };
 
-const remove = (req, res) => {
+const remove = async (req, res) => {
   const { id } = req.params;
   try {
     if (id) {
-      Collaborator.findByIdAndRemove(id).exec((err, data) => {
-        if (err) {
-          dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-          return res.status(400).json({
-            message: err.message,
-          });
-        }
-        res.json({
-          success: true,
-          message: `${NAME} is deleted successfully`,
+      const colab = await Collaborator.findById(id);
+      if (colab.link_management_ids.length > 0) {
+        res.status(400).json({
+          success: false,
+          message: "Cộng tác viên còn các bài viết nên không thể xóa",
         });
-      });
+      } else {
+        Collaborator.findByIdAndRemove(id).exec((err, data) => {
+          if (err) {
+            dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+            return res.status(400).json({
+              message: err.message,
+            });
+          }
+          res.json({
+            success: true,
+            message: `${NAME} is deleted successfully`,
+          });
+        });
+      }
     } else {
       dashLogger.error(
         `Error : 'Not found ${NAME}', Request : ${req.originalUrl}`
@@ -149,15 +157,13 @@ const getAllCollaboratorsByDomainId = async (req, res) => {
 
 const getCollaboratorsByDomainId = async (req, res) => {
   try {
-    const {brand, domainId, team } = req.query;
-
+    const { brand, domainId, team } = req.query;
 
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
 
     const data = await CollaboratorService.getCollaboratorsByDomainId(
-      
       domainId,
       team,
       brand,

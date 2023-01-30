@@ -1,4 +1,5 @@
 const Brand = require("../models/brand.model");
+const Team = require("../models/team.model");
 const BrandService = require("../services/brand.service");
 const { dashLogger } = require("../logger");
 const ResponseModel = require("../helpers/ResponseModel");
@@ -56,12 +57,14 @@ const getAll = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const  {name}  = req.body;
-    console.log('name',req.body);
+    const { name } = req.body;
+    console.log("name", req.body);
     const checkExist = await Brand.findOne({ name });
 
     if (checkExist)
-      return res.status(400).json({ messages: `${NAME} is already exist`, success: false });
+      return res
+        .status(400)
+        .json({ messages: `${NAME} is already exist`, success: false });
 
     const brand = await BrandService.create(req.body);
 
@@ -114,22 +117,30 @@ const update = async (req, res) => {
   }
 };
 
-const remove = (req, res) => {
+const remove = async (req, res) => {
   const { id } = req.params;
   try {
     if (id) {
-      Brand.findByIdAndRemove(id).exec((err, data) => {
-        if (err) {
-          dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-          return res.status(400).json({
-            message: err.message,
-          });
-        }
-        res.json({
-          success: true,
-          message: `${NAME} is deleted successfully`,
+      const child = await Team.find({ brand: id });
+      if (child.length > 0) {
+        res.status(400).json({
+          success: false,
+          message: "Brand này còn team nên không thể xóa !",
         });
-      });
+      } else {
+        Brand.findByIdAndRemove(id).exec((err, data) => {
+          if (err) {
+            dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+            return res.status(400).json({
+              message: err.message,
+            });
+          }
+          res.json({
+            success: true,
+            message: `${NAME} is deleted successfully`,
+          });
+        });
+      }
     } else {
       dashLogger.error(
         `Error : 'Not found ${NAME}', Request : ${req.originalUrl}`

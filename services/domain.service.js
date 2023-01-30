@@ -5,7 +5,7 @@ const { ObjectId } = require("mongoose").Types.ObjectId;
 
 const create = async (data) => {
   try {
-    const { name, total, team , brand } = data;
+    const { name, total, team, brand } = data;
 
     if (!name || !team || !brand) {
       throw {

@@ -442,9 +442,9 @@ const getLinkManagementsByCollaboratorId = async (req, res) => {
     const data =
       await LinkManagementService.getAllLinkManagementsByCollaboratorId(
         domainId,
-      team,
-      brand,
-      colad,
+        team,
+        brand,
+        colad,
         pageIndex,
         pageSize,
         search
@@ -611,6 +611,9 @@ const getStatisticByBrand = async (req, res) => {
               foreignField: "team",
               pipeline: [
                 {
+                  $match: { brand: null },
+                },
+                {
                   $lookup: {
                     from: "collaborators",
                     localField: "_id",
@@ -648,6 +651,7 @@ const getStatisticByBrand = async (req, res) => {
     {
       $limit: Number(pageSize),
     },
+
     {
       $match: {
         "team.domains.collaborators.link_management_ids.createdAt": {

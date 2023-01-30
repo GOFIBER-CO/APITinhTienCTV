@@ -1,6 +1,7 @@
 const Domain = require("../models/domain.model");
 const DomainService = require("../services/domain.service");
 const LinkManagement = require("../models/linkManagement.model");
+const Collaborator = require("../models/collaborator.model");
 const { dashLogger } = require("../logger");
 const ResponseModel = require("../helpers/ResponseModel");
 
@@ -16,7 +17,7 @@ const search = async (req, res) => {
 
     return res.status(200).json(data);
   } catch (error) {
-    console.log(error,'error');
+    console.log(error, "error");
     let response = new ResponseModel(400, error.message, error);
     res.status(400).json(response);
   }
@@ -99,22 +100,30 @@ const update = async (req, res) => {
   }
 };
 
-const remove = (req, res) => {
+const remove = async (req, res) => {
   const { id } = req.params;
   try {
     if (id) {
-      Domain.findByIdAndRemove(id).exec((err, data) => {
-        if (err) {
-          dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
-          return res.status(400).json({
-            message: err.message,
-          });
-        }
-        res.json({
-          success: true,
-          message: `${NAME} is deleted successfully`,
+      const child = await Collaborator.find({ domain_id: id });
+      if (child.length > 0) {
+        res.status(400).json({
+          success: false,
+          message: "Domain còn cộng tác viên nên không thể xóa!",
         });
-      });
+      } else {
+        Domain.findByIdAndRemove(id).exec((err, data) => {
+          if (err) {
+            dashLogger.error(`Error : ${err}, Request : ${req.originalUrl}`);
+            return res.status(400).json({
+              message: err.message,
+            });
+          }
+          res.json({
+            success: true,
+            message: `${NAME} is deleted successfully`,
+          });
+        });
+      }
     } else {
       dashLogger.error(
         `Error : 'Not found ${NAME}', Request : ${req.originalUrl}`
