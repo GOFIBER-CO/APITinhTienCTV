@@ -1,11 +1,10 @@
 const { dashLogger } = require("../logger");
 const Team = require("../models/team.model");
-
+const Domain = require("../models/domain.model");
 class TeamController {
   async getAll(req, res, next) {
     try {
       const Teams = await Team.find({}).populate("brand");
-
       return res.status(200).json({
         success: true,
         message: "Success",
@@ -103,8 +102,16 @@ class TeamController {
           .status(400)
           .json({ success: false, message: "Team doesn't exists!" });
       }
-      await Team.findByIdAndDelete(id);
-      return res.status(200).json({ success: true });
+      const child = await Domain.find({ team: id });
+      if (child.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Team còn domain nên không thể xóa!",
+        });
+      } else {
+        await Team.findByIdAndDelete(id);
+        return res.status(200).json({ success: true });
+      }
     } catch (error) {
       console.log(error);
       return res.status(500).json({ success: false, message: error });

@@ -582,9 +582,9 @@ const getLinkManagementsByCollaboratorId = async (req, res) => {
     const data =
       await LinkManagementService.getAllLinkManagementsByCollaboratorId(
         domainId,
-      team,
-      brand,
-      coladId,
+        team,
+        brand,
+        coladId,
         pageIndex,
         pageSize,
         search
@@ -632,15 +632,15 @@ const getLinkManagementsByDomainId = async (req, res) => {
   }
 };
 
-const getLinkManagementsByTeamUser = async (req, res) =>{
+const getLinkManagementsByTeamUser = async (req, res) => {
   try {
-    const {teamId} = req.query;
+    const { teamId } = req.query;
     const listDomain = await Domain.find({ team: teamId }).select("_id");
     //xử lý list để lấy list id
     const listIdDomain = listDomain?.map((item) => item?._id);
     const data = await Collaborator.find({
       domain_id: listIdDomain,
-    })
+    });
 
     return res.status(200).json(data);
   } catch (error) {
@@ -649,7 +649,7 @@ const getLinkManagementsByTeamUser = async (req, res) =>{
       message: error.message,
     });
   }
-}
+};
 
 const getLinkManagementsByTeamId = async (req, res) => {
   try {
@@ -770,6 +770,9 @@ const getStatisticByBrand = async (req, res) => {
               foreignField: "team",
               pipeline: [
                 {
+                  $match: { brand: null },
+                },
+                {
                   $lookup: {
                     from: "collaborators",
                     localField: "_id",
@@ -807,6 +810,7 @@ const getStatisticByBrand = async (req, res) => {
     {
       $limit: Number(pageSize),
     },
+
     {
       $match: {
         "team.domains.collaborators.link_management_ids.createdAt": {
@@ -935,5 +939,5 @@ module.exports = {
   getLinkManagementsByDomainId,
   getLinkManagementsByTeamId,
   getLinkManagementsByBrandId,
-  getLinkManagementsByTeamUser
+  getLinkManagementsByTeamUser,
 };
