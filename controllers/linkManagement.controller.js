@@ -238,10 +238,13 @@ const create = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title } = req.body;
+    const { link_posted,keyword,category, status, price_per_word , collaboratorId} = req.body;
+    // console.log(req.body, 'ádsad');
+    // return ;
 
     const checkIsFound = await LinkManagement.findById(id);
-
+    // console.log(checkIsFound, 'checkIsFound');
+    // return;
     if (!checkIsFound) {
       dashLogger.error(
         `Error : Not found ${NAME}, Request : ${req.originalUrl}`
@@ -250,10 +253,147 @@ const update = async (req, res) => {
       return res.status(400).json({ message: `Not found ${NAME}` });
     }
 
+    const collaborators = await Collaborator.aggregate([
+      {
+        $addFields: {
+          collaboratorId: {
+            $toString: "$_id",
+          },
+        },
+      },
+      {
+        $match: {
+          collaboratorId,
+        },
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain_id",
+          foreignField: "_id",
+          as: "domain",
+        },
+      },
+      {
+        $unwind: "$domain",
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "domain.team",
+          foreignField: "_id",
+          as: "team",
+        },
+      },
+      // {
+      //   $unwind:"$domain.team"
+      // },
+      {
+        $lookup: {
+          from: "brands",
+          localField: "team.brand",
+          foreignField: "_id",
+          as: "brand",
+        },
+      },
+      {
+        $unwind: "$team",
+      },
+      {
+        $unwind: "$brand",
+      },
+    ]);
+    const [collaborator] = collaborators;
+
+    if (!collaborator) {
+      return res.status(400).json({ message: "Not found Collaborator" });
+    }
+
+    // console.log(collaborators, 'collaborators');
+    // return;
     const linkManagement = await LinkManagementService.update({
       id,
-      linkManagement: req.body,
+      linkManagement: {
+        link_posted,
+        keyword,
+        category, 
+        status, 
+        price_per_word,
+        total: checkIsFound?.number_words * price_per_word
+      },
     });
+
+    const {
+      number_words: oldNumberWord,
+      domain,
+      team,
+      brand,
+      link_management_ids,
+    } = collaborator;
+    const newTotal = checkIsFound?.number_words * price_per_word;
+
+    const newCollaborator = {
+      number_words: Number(oldNumberWord) + checkIsFound?.number_words,
+      total: Number(collaborator?.total - checkIsFound?.total || 0) + newTotal,
+    };
+
+    if (linkManagement?._id)
+      newCollaborator.link_management_ids = [
+        ...(link_management_ids || []),
+        linkManagement?._id,
+      ];
+
+    const newDomain = {
+      total: Number(domain?.total - checkIsFound?.total || 0) + newTotal,
+    };
+    const newTeam = {
+      total: Number(team?.total - checkIsFound?.total || 0) + newTotal,
+    };
+    const newBrand = {
+      total: Number(brand?.total - checkIsFound?.total || 0) + newTotal,
+    };
+    const updateCollaborator = Collaborator.updateOne(
+      {
+        _id: collaborator?._id,
+      },
+      {
+        $set: newCollaborator,
+      },
+      { upsert: true }
+    );
+
+    const updateDomain = Domain.updateOne(
+      {
+        _id: domain?._id,
+      },
+      {
+        $set: newDomain,
+      },
+      { upsert: true }
+    );
+    const updateTeam = Team.updateOne(
+      {
+        _id: team?._id,
+      },
+      {
+        $set: newTeam,
+      },
+      { upsert: true }
+    );
+    const updateBrand = Brand.updateOne(
+      {
+        _id: brand?._id,
+      },
+      {
+        $set: newBrand,
+      },
+      { upsert: true }
+    );
+    Promise.all([updateCollaborator, updateDomain, updateBrand, updateTeam])
+      .then()
+      .catch(() => {
+        return res.status(400).json({ messages: `Error` });
+      });
 
     return res.status(200).json({
       success: true,
