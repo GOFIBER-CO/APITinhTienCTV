@@ -5,14 +5,15 @@ const { ObjectId } = require("mongoose").Types.ObjectId;
 
 const create = async (data) => {
   try {
-    const { name, total, team } = data;
+    const { name, total, team , brand } = data;
 
-    if (!name || !team) {
+    if (!name || !team || !brand) {
       throw {
         message: "Vui lòng nhập thông tin",
         description: genFieldsRequire({
           name,
           team,
+          brand,
         }),
       };
     }
@@ -22,6 +23,7 @@ const create = async (data) => {
     domain.name = name;
     domain.total = Number(total || 0);
     domain.team = team;
+    domain.brand = brand;
 
     const newDomain = await domain.save();
 
