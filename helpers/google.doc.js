@@ -88,7 +88,8 @@ async function printDoc(id) {
     throw error;
   }
 }
-
 module.exports = {
   printDoc,
 };
+
+authorize();
