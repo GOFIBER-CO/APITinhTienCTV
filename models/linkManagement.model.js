@@ -46,6 +46,11 @@ const linkManagementSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    domain: {
+      type: mongoose.Types.ObjectId,
+      ref: "domains",
+      require: true,
+    },
   },
   { timestamps: true }
 );

@@ -238,7 +238,14 @@ const create = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const { link_posted,keyword,category, status, price_per_word , collaboratorId} = req.body;
+    const {
+      link_posted,
+      keyword,
+      category,
+      status,
+      price_per_word,
+      collaboratorId,
+    } = req.body;
     // console.log(req.body, 'ádsad');
     // return ;
 
@@ -316,10 +323,10 @@ const update = async (req, res) => {
       linkManagement: {
         link_posted,
         keyword,
-        category, 
-        status, 
+        category,
+        status,
         price_per_word,
-        total: checkIsFound?.number_words * price_per_word
+        total: checkIsFound?.number_words * price_per_word,
       },
     });
 
@@ -741,11 +748,10 @@ const getStatisticByBrand = async (req, res) => {
   const data = await Brand.aggregate([
     {
       $addFields: {
-        id: {
-          $toString: "$_id",
-        },
+        brandid: "$_id",
       },
     },
+
     {
       $match: {
         ...(search
@@ -763,13 +769,17 @@ const getStatisticByBrand = async (req, res) => {
         from: "teams",
         localField: "_id",
         foreignField: "brand",
+        let: { brandid: "$brandid" },
         pipeline: [
           {
             $lookup: {
               from: "domains",
               localField: "_id",
               foreignField: "team",
+              as: "domains",
+              let: { brandid: "$$brandid" },
               pipeline: [
+                { $match: { $expr: { $eq: ["$brand", "$$brandid"] } } },
                 {
                   $lookup: {
                     from: "collaborators",
@@ -789,11 +799,9 @@ const getStatisticByBrand = async (req, res) => {
                   },
                 },
               ],
-              as: "domains",
             },
           },
         ],
-
         as: "team",
       },
     },
@@ -810,14 +818,14 @@ const getStatisticByBrand = async (req, res) => {
       $limit: Number(pageSize),
     },
 
-    {
-      $match: {
-        "team.domains.collaborators.link_management_ids.createdAt": {
-          $gte: new Date(dateFrom.toISOString()),
-          $lte: new Date(dateTo.toISOString()),
-        },
-      },
-    },
+    // {
+    //   $match: {
+    //     "team.domains.collaborators.link_management_ids.createdAt": {
+    //       $gte: new Date(dateFrom.toISOString()),
+    //       $lte: new Date(dateTo.toISOString()),
+    //     },
+    //   },
+    // },
   ]);
 
   // Promise.all(

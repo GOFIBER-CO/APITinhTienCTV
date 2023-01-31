@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { genFieldsRequire } = require("../helpers");
 const Brand = require("../models/brand.model");
 const Collaborator = require("../models/collaborator.model");
@@ -116,7 +117,7 @@ const search = async (pageSize = 10, pageIndex = 1, search = "") => {
 
 const getById = async (id) => {
   try {
-    const collaborator = await Collaborator.findById(id);
+    const collaborator = await Collaborator.findById(id).populate("domain_id");
 
     if (!collaborator) throw { message: "Not found Collaborator" };
 
@@ -172,105 +173,73 @@ const getCollaboratorsByDomainId = async (
   try {
     const data = await Collaborator.aggregate([
       {
-        $addFields: {
-          domainId: {
-            $toString: "$domain_id",
-          },
+        $match: {
+          ...(search
+            ? {
+                name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              }
+            : {}),
         },
       },
-      
       {
         $lookup: {
           from: "domains",
           localField: "domain_id",
           foreignField: "_id",
+          as: "domain",
           pipeline: [
+            {
+              $match: {
+                brand: brand ? mongoose.Types.ObjectId(brand) : { $ne: null },
+              },
+            },
+            {
+              $lookup: {
+                from: "brands",
+                localField: "brand",
+                foreignField: "_id",
+                as: "brand",
+              },
+            },
             {
               $lookup: {
                 from: "teams",
                 localField: "team",
                 foreignField: "_id",
-                pipeline: [],
                 as: "team",
               },
             },
+          ],
+        },
+      },
+      {
+        $match: {
+          domain_id: domainId
+            ? mongoose.Types.ObjectId(domainId)
+            : { $ne: null },
+        },
+      },
+      // {
+      //   $match: {
+      //     "domain.brand._id": brand
+      //       ? mongoose.Types.ObjectId(brand)
+      //       : { $ne: null },
+      //   },
+      // },
+
+      {
+        $match: {
+          $and: [
+            { "domain.brand._id": mongoose.Types.ObjectId(brand) },
             {
-              $unwind: "$team",
+              "domain.team._id": team
+                ? mongoose.Types.ObjectId(team)
+                : { $ne: null },
             },
           ],
-          as: "domain",
-        },
-      },
-      {
-        $unwind: "$domain",
-      },
-      {
-        $set: {
-          link_ids: {
-            $map: {
-              input: "$domain.team.brand",
-              as: "item",
-              in: {
-                $toString: "$$item",
-              },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          teamId: {
-            $toString: "$domain.team._id",
-          },
-        },
-      },
-      {
-        $match: {
-          link_ids: { $elemMatch: { $in: [brand] } },
-          ...(team
-            ? {
-                teamId: team,
-              }
-            : {}),
-          ...(domainId
-            ? {
-                domainId,
-              }
-            : {}),
-        },
-      },
-      {
-        $match: {
-          ...(search
-            ? {
-                $or: [
-                  {
-                    name: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                  {
-                    bank_name: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                  {
-                    stk: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                  {
-                    account_holder: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                ],
-              }
-            : {}),
         },
       },
       {
@@ -282,117 +251,71 @@ const getCollaboratorsByDomainId = async (
         $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
       },
       {
-        $limit: Number(pageSize) || 9999999,
+        $limit: Number(pageSize),
       },
     ]);
-
     const count = await Collaborator.aggregate([
       {
-        $addFields: {
-          domainId: {
-            $toString: "$domain_id",
-          },
+        $match: {
+          ...(search
+            ? {
+                name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
+                },
+              }
+            : {}),
         },
       },
-      
       {
         $lookup: {
           from: "domains",
           localField: "domain_id",
           foreignField: "_id",
+          as: "domain",
           pipeline: [
+            {
+              $lookup: {
+                from: "brands",
+                localField: "brand",
+                foreignField: "_id",
+                as: "brand",
+              },
+            },
             {
               $lookup: {
                 from: "teams",
                 localField: "team",
                 foreignField: "_id",
-                pipeline: [],
                 as: "team",
               },
             },
-            {
-              $unwind: "$team",
-            },
           ],
-          as: "domain",
-        },
-      },
-      {
-        $unwind: "$domain",
-      },
-      {
-        $set: {
-          link_ids: {
-            $map: {
-              input: "$domain.team.brand",
-              as: "item",
-              in: {
-                $toString: "$$item",
-              },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          teamId: {
-            $toString: "$domain.team._id",
-          },
         },
       },
       {
         $match: {
-          link_ids: { $elemMatch: { $in: [brand] } },
-          ...(team
-            ? {
-                teamId: team,
-              }
-            : {}),
-          ...(domainId
-            ? {
-                domainId,
-              }
-            : {}),
+          domain_id: domainId
+            ? mongoose.Types.ObjectId(domainId)
+            : { $ne: null },
         },
       },
       {
         $match: {
-          ...(search
-            ? {
-                $or: [
-                  {
-                    name: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                  {
-                    bank_name: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                  {
-                    stk: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                  {
-                    account_holder: {
-                      $regex: ".*" + search + ".*",
-                      $options: "i",
-                    },
-                  },
-                ],
-              }
-            : {}),
+          "domain.brand._id": brand
+            ? mongoose.Types.ObjectId(brand)
+            : { $ne: null },
         },
       },
-    ]);
-
+      {
+        $match: {
+          "domain.team._id": team
+            ? mongoose.Types.ObjectId(team)
+            : { $ne: null },
+        },
+      },
+    ]).count;
     let totalPages = Math.ceil(count?.length / pageSize);
-
     return {
       pageIndex,
       pageSize,

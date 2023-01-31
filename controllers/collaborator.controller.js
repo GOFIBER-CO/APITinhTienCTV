@@ -31,6 +31,7 @@ const search = async (req, res) => {
 
 const getById = async (req, res) => {
   try {
+    const id = req.params.id;
     const domain = await CollaboratorService.getById(id);
 
     return res.status(200).json({
@@ -282,7 +283,18 @@ const getCollaboratorsByBrand = async (req, res) => {
     });
   }
 };
-
+const getDomainByCollaborator = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const colab = await Collaborator.findById(id);
+    res.status(200).json({ success: true, colab });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
 module.exports = {
   search,
   create,

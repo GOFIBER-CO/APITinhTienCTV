@@ -44,11 +44,13 @@ const CollaboratorSchema = new mongoose.Schema(
       default: OWNER_CONFIRM.PENDING,
       enum: [1, 2],
     },
-    domain_id: {
-      type: ObjectId,
-      require: true,
-      ref: "Domain",
-    },
+    domain_id: [
+      {
+        type: ObjectId,
+        require: true,
+        ref: "Domain",
+      },
+    ],
     note: {
       type: String,
       default: "",

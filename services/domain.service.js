@@ -129,36 +129,18 @@ const getAllDomainsByBrandId = async (brandId) => {
     throw error;
   }
 };
-const getAllDomainsByTeamId = async (team) => {
+const getAllDomainsByTeamId = async (team, brand) => {
   try {
-    // const result = await Domain.aggregate([
-    //   {
-    //     $addFields: {
-    //       team: {
-    //         $toString: "$team",
-    //       },
-    //     },
-    //   },
-    //   {
-    //     $match: {
-    //       team,
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "teams",
-    //       localField: "team",
-    //       foreignField: "_id",
-    //       as: "team",
-    //     },
-    //   },
-    // ])
-    const result = await Domain.find({ team: team.toString() }).populate(
-      "team"
-    );
+    const result = await Domain.find({
+      team: team.toString(),
+      brand: brand.toString(),
+    })
+      .populate("team")
+      .populate("brand");
 
     return {
       team,
+      brand,
       data: result || [],
       count: result?.length || 0,
     };

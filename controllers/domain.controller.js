@@ -181,8 +181,9 @@ const getDomainsByBrandId = async (req, res) => {
 const getAllDomainsByTeamId = async (req, res) => {
   try {
     const { team } = req.params;
+    const brand = req.query.brand;
 
-    const data = await DomainService.getAllDomainsByTeamId(team);
+    const data = await DomainService.getAllDomainsByTeamId(team, brand);
 
     return res.status(200).json(data);
   } catch (error) {
