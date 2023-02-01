@@ -49,13 +49,21 @@ const update = async ({ id, domain }) => {
   }
 };
 
-const search = async (pageSize = 10, pageIndex = 1, search = "") => {
+const search = async (
+  pageSize = 10,
+  pageIndex = 1,
+  search = "",
+  dateFrom,
+  dateTo
+) => {
   try {
     let searchObj = {};
     if (search) {
       searchObj.name = { $regex: ".*" + search + ".*" };
     }
-
+    if (dateFrom !== "" && dateTo !== "") {
+      searchObj.createdAt = { $gte: dateFrom, $lte: dateTo };
+    }
     let data = await Domain.find(searchObj)
       .skip(pageSize * pageIndex - pageSize)
       .limit(parseInt(pageSize))

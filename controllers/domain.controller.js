@@ -12,8 +12,17 @@ const search = async (req, res) => {
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
-
-    const data = await DomainService.search(pageSize, pageIndex, search);
+    const dateFrom =
+      req.query.dateFrom !== "undefined" ? new Date(req.query.dateFrom) : "";
+    const dateTo =
+      req.query.dateTo !== "undefined" ? new Date(req.query.dateTo) : "";
+    const data = await DomainService.search(
+      pageSize,
+      pageIndex,
+      search,
+      dateFrom,
+      dateTo
+    );
 
     return res.status(200).json(data);
   } catch (error) {

@@ -72,11 +72,25 @@ class TeamController {
       const pageSize = req.query.pageSize || 10;
       const pageIndex = req.query.pageIndex || 1;
       const search = req.query.search || "";
+      const dateFrom =
+        req.query.dateFrom !== "undefined"
+          ? new Date(req.query.dateFrom)
+          : new Date(Date.now() - 30 * 60 * 60 * 24 * 1000);
+      const dateTo =
+        req.query.dateTo !== "undefined"
+          ? new Date(req.query.dateTo)
+          : new Date(Date.now());
       let searchQuery = {};
       if (search) {
         // { $regex: ".*" + search + ".*" };
-        searchQuery = { name: { $regex: search, $options: "i" } };
-        // searchQuery.name = { $regex: ".*" + search + ".*" };
+        // searchQuery = { name: { $regex: search, $options: "i" } };
+        searchQuery.name = { $regex: ".*" + search + ".*" };
+      }
+      if (
+        req.query.dateFrom !== "undefined" &&
+        req.query.dateTo !== "undefined"
+      ) {
+        searchQuery.createdAt = { $gte: dateFrom, $lte: dateTo };
       }
       const data = await Team.find(searchQuery)
         .populate("brand")
@@ -122,6 +136,27 @@ class TeamController {
       const pageSize = req.query.pageSize || 10;
       const pageIndex = req.query.pageIndex || 1;
       const brand = req.params.brand || "";
+      const search = req.params.search || "";
+      const dateFrom =
+        req.query.dateFrom !== "undefined"
+          ? new Date(req.query.dateFrom)
+          : new Date(Date.now() - 30 * 60 * 60 * 24 * 1000);
+      const dateTo =
+        req.query.dateTo !== "undefined"
+          ? new Date(req.query.dateTo)
+          : new Date(Date.now());
+      let searchQuery = {};
+      searchQuery = { brand: brand.toString() };
+      if (search) {
+        searchQuery.name = { $regex: ".*" + search + ".*" };
+      }
+      if (
+        req.query.dateFrom !== "undefined" &&
+        req.query.dateTo !== "undefined"
+      ) {
+        searchQuery.createdAt = { $gte: dateFrom, $lte: dateTo };
+      }
+
       const data = await Team.find({
         brand: brand.toString(),
       })

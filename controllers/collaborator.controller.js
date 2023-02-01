@@ -159,7 +159,8 @@ const getAllCollaboratorsByDomainId = async (req, res) => {
 const getCollaboratorsByDomainId = async (req, res) => {
   try {
     const { brand, domainId, team } = req.query;
-
+    const dateFrom = req.query.dateFrom;
+    const dateTo = req.query.dateTo;
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
@@ -170,7 +171,9 @@ const getCollaboratorsByDomainId = async (req, res) => {
       brand,
       pageIndex,
       pageSize,
-      search
+      search,
+      dateFrom,
+      dateTo
     );
 
     return res.status(200).json(data);

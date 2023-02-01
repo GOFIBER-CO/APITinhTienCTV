@@ -168,8 +168,11 @@ const getCollaboratorsByDomainId = async (
   brand = "",
   pageIndex = 1,
   pageSize = 10,
-  search = ""
+  search = "",
+  dateFrom = "",
+  dateTo = ""
 ) => {
+  console.log(dateFrom, dateTo, "aaa");
   try {
     const data = await Collaborator.aggregate([
       {
@@ -252,6 +255,22 @@ const getCollaboratorsByDomainId = async (
       },
       {
         $limit: Number(pageSize),
+      },
+      {
+        $match: {
+          ...(dateFrom !== "undefined" && dateTo !== "undefined"
+            ? {
+                $and: [
+                  {
+                    createdAt: { $gte: new Date(dateFrom) },
+                  },
+                  {
+                    createdAt: { $lte: new Date(dateTo) },
+                  },
+                ],
+              }
+            : {}),
+        },
       },
     ]);
     const count = await Collaborator.aggregate([
