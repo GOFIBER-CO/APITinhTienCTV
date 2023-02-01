@@ -483,7 +483,6 @@ const remove = async (req, res) => {
       },
     ]);
     const [collaborator] = collaborators;
-
     if (!collaborator) {
       return res.status(400).json({ message: "Not found Collaborator" });
     }
@@ -491,7 +490,6 @@ const remove = async (req, res) => {
     const { number_words: oldNumberWord, domain, link_ids } = collaborator;
     const { team } = collaborator;
     const { brand } = collaborator;
-
     const total = number_words * link.price_per_word;
     const newCollaborator = {
       number_words: Number(oldNumberWord) - number_words,
@@ -533,7 +531,7 @@ const remove = async (req, res) => {
       },
       { upsert: true }
     );
-    const updateTeam = Domain.updateOne(
+    const updateTeam = Team.updateOne(
       {
         _id: team?._id,
       },
@@ -738,110 +736,143 @@ const getLinkManagementsByBrandId = async (req, res) => {
 };
 
 const getStatisticByBrand = async (req, res) => {
-  const pageSize = Number(req.query?.pageSize) || 10;
-  const pageIndex = Number(req.query?.pageIndex) || 1;
-  const search = req.query?.search || "";
-  const dateFrom =
-    new Date(req.query?.dateFrom) ||
-    new Date(Date.now() - 30 * 60 * 60 * 24 * 1000);
-  const dateTo = new Date(req.query?.dateTo) || new Date(Date.now());
-  const data = await Brand.aggregate([
-    {
-      $addFields: {
-        brandid: "$_id",
+  try {
+    const pageSize = Number(req.query?.pageSize) || 10;
+    const pageIndex = Number(req.query?.pageIndex) || 1;
+    const search = req.query?.search || "";
+    const dateFrom = new Date(
+      req.query?.dateFrom !== "undefined"
+        ? req.query?.dateFrom
+        : Date.now() - 30 * 60 * 60 * 24 * 1000
+    );
+    const dateTo = new Date(
+      req.query?.dateTo !== "undefined" ? req.query?.dateTo : Date.now()
+    );
+    console.log(dateFrom, dateTo);
+    const data = await Brand.aggregate([
+      {
+        $addFields: {
+          brandid: "$_id",
+        },
       },
-    },
 
-    {
-      $match: {
-        ...(search
-          ? {
-              name: {
-                $regex: ".*" + search + ".*",
-                $options: "i",
-              },
-            }
-          : {}),
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "_id",
-        foreignField: "brand",
-        let: { brandid: "$brandid" },
-        pipeline: [
-          {
-            $lookup: {
-              from: "domains",
-              localField: "_id",
-              foreignField: "team",
-              as: "domains",
-              let: { brandid: "$$brandid" },
-              pipeline: [
-                { $match: { $expr: { $eq: ["$brand", "$$brandid"] } } },
-                {
-                  $lookup: {
-                    from: "collaborators",
-                    localField: "_id",
-                    foreignField: "domain_id",
-                    as: "collaborators",
-                    pipeline: [
-                      {
-                        $lookup: {
-                          from: "linkmanagements",
-                          localField: "link_management_ids",
-                          foreignField: "_id",
-                          as: "link_management_ids",
-                        },
-                      },
-                    ],
-                  },
+      {
+        $match: {
+          ...(search
+            ? {
+                name: {
+                  $regex: ".*" + search + ".*",
+                  $options: "i",
                 },
-              ],
+              }
+            : {}),
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "_id",
+          foreignField: "brand",
+          let: { brandid: "$brandid" },
+          pipeline: [
+            {
+              $lookup: {
+                from: "domains",
+                localField: "_id",
+                foreignField: "team",
+                as: "domains",
+                let: { brandid: "$$brandid" },
+                pipeline: [
+                  { $match: { $expr: { $eq: ["$brand", "$$brandid"] } } },
+                  {
+                    $lookup: {
+                      from: "collaborators",
+                      localField: "_id",
+                      foreignField: "domain_id",
+                      as: "collaborators",
+                      pipeline: [
+                        {
+                          $lookup: {
+                            from: "linkmanagements",
+                            localField: "link_management_ids",
+                            foreignField: "_id",
+                            as: "link_management_ids",
+                          },
+                        },
+                        {
+                          $match: {
+                            createdAt: {
+                              $gte: new Date(dateFrom?.toISOString()),
+                              $lte: new Date(dateTo?.toISOString()),
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    $match: {
+                      createdAt: {
+                        $gte: new Date(dateFrom?.toISOString()),
+                        $lte: new Date(dateTo?.toISOString()),
+                      },
+                    },
+                  },
+                ],
+              },
             },
+            {
+              $match: {
+                createdAt: {
+                  $gte: new Date(dateFrom?.toISOString()),
+                  $lte: new Date(dateTo?.toISOString()),
+                },
+              },
+            },
+          ],
+          as: "team",
+        },
+      },
+
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize),
+      },
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(dateFrom?.toISOString()),
+            $lte: new Date(dateTo?.toISOString()),
           },
-        ],
-        as: "team",
+        },
       },
-    },
+    ]);
 
-    {
-      $sort: {
-        createdAt: -1,
-      },
-    },
-    {
-      $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
-    },
-    {
-      $limit: Number(pageSize),
-    },
+    // Promise.all(
+    //   data?.map(async (brand) => {
+    //     let total = 0;
+    //     brand?.team?.map((team) => {
+    //       total = total + team?.total;
+    //     });
+    //     if (brand?.total !== total) {
+    //       brand.total = total;
+    //       await Brand.findByIdAndUpdate(brand?.id, { total: total });
+    //     }
+    //   })
+    // );
 
-    // {
-    //   $match: {
-    //     "team.domains.collaborators.link_management_ids.createdAt": {
-    //       $gte: new Date(dateFrom.toISOString()),
-    //       $lte: new Date(dateTo.toISOString()),
-    //     },
-    //   },
-    // },
-  ]);
-
-  // Promise.all(
-  //   data?.map(async (brand) => {
-  //     let total = 0;
-  //     brand?.team?.map((team) => {
-  //       total = total + team?.total;
-  //     });
-  //     if (brand?.total !== total) {
-  //       brand.total = total;
-  //       await Brand.findByIdAndUpdate(brand?.id, { total: total });
-  //     }
-  //   })
-  // );
-
-  return res.status(200).json({ success: true, data });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false });
+  }
 };
 const getStatisticByTeam = async (req, res) => {
   const pageSize = Number(req.query?.pageSize) || 10;

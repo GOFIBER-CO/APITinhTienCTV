@@ -365,6 +365,17 @@ const getAllLinkManagementsByCollaboratorId = async (
       {
         $limit: Number(pageSize),
       },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain",
+          foreignField: "_id",
+          as: "domain",
+        },
+      },
+      {
+        $unwind: "$domain",
+      },
     ]);
     const count = await LinkManagement.aggregate([
       {
@@ -562,7 +573,6 @@ const getAllLinkManagementsByDomainId = async (
         },
       },
     ]);
-    console.log(result);
     let count = result[0]?.count || 0;
     let totalPages = Math.ceil(count / pageSize);
 
