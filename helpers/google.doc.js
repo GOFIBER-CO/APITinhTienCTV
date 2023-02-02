@@ -62,6 +62,7 @@ async function authorize() {
     scopes: SCOPES,
     keyfilePath: CREDENTIALS_PATH,
   });
+
   if (client.credentials) {
     await saveCredentials(client);
   }

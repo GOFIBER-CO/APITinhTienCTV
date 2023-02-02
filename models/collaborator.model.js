@@ -43,7 +43,7 @@ const CollaboratorSchema = new mongoose.Schema(
       type: Number,
       default: OWNER_CONFIRM.PENDING,
       enum: [1, 2],
-    },
+    },  
     domain_id: [
       {
         type: ObjectId,

@@ -136,14 +136,17 @@ const create = async (req, res) => {
       body,
       inlineObjects
     );
-    const PRICE = req.body.price_per_word || 60;
+
+    const PRICE = req.body.price_per_word;
+    const totalPrices = Number(req.body.total);
+    console.log(PRICE, "aaa", totalPrices);
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
       number_images: number_image,
       number_words: number_word,
       title,
-      total: number_word * PRICE,
+      total: number_word * PRICE || totalPrices,
     };
 
     const linkManagement = await LinkManagementService.create(data);
@@ -155,7 +158,7 @@ const create = async (req, res) => {
       brand,
       link_management_ids,
     } = collaborator;
-    const newTotal = number_word * PRICE;
+    const newTotal = number_word * PRICE || totalPrices;
 
     const newCollaborator = {
       number_words: Number(oldNumberWord) + number_word,
@@ -245,6 +248,7 @@ const update = async (req, res) => {
       status,
       price_per_word,
       collaboratorId,
+      total,
     } = req.body;
     // console.log(req.body, 'ádsad');
     // return ;
@@ -326,7 +330,7 @@ const update = async (req, res) => {
         category,
         status,
         price_per_word,
-        total: checkIsFound?.number_words * price_per_word,
+        total: checkIsFound?.number_words * price_per_word || total,
       },
     });
 
@@ -337,7 +341,7 @@ const update = async (req, res) => {
       brand,
       link_management_ids,
     } = collaborator;
-    const newTotal = checkIsFound?.number_words * price_per_word;
+    const newTotal = checkIsFound?.number_words * price_per_word || total;
 
     const newCollaborator = {
       number_words: Number(oldNumberWord) + checkIsFound?.number_words,
@@ -482,6 +486,7 @@ const remove = async (req, res) => {
         $unwind: "$brand",
       },
     ]);
+
     const [collaborator] = collaborators;
     if (!collaborator) {
       return res.status(400).json({ message: "Not found Collaborator" });
@@ -490,7 +495,7 @@ const remove = async (req, res) => {
     const { number_words: oldNumberWord, domain, link_ids } = collaborator;
     const { team } = collaborator;
     const { brand } = collaborator;
-    const total = number_words * link.price_per_word;
+    const total = link.total;
     const newCollaborator = {
       number_words: Number(oldNumberWord) - number_words,
       total: Number(collaborator?.total || 0) - total,

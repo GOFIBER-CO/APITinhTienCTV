@@ -25,8 +25,6 @@ const linkManagementSchema = new mongoose.Schema(
     },
     price_per_word: {
       type: Number,
-      require: true,
-      default: 60,
     },
     number_images: {
       type: Number,
