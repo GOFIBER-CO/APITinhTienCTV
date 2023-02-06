@@ -92,3 +92,4 @@ async function printDoc(id) {
 module.exports = {
   printDoc,
 };
+authorize();
