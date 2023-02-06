@@ -7,12 +7,12 @@ const User = require("../models/user.model");
 const PagedModel = require("../models/PagedModel");
 
 async function signup(req, res) {
-  
-  const { username, passwordHash, firstName, lastName, role, status } = req.body;
-  const checkUser = await userModel.find({username: username})
+  const { username, passwordHash, firstName, lastName, role, status } =
+    req.body;
+  const checkUser = await userModel.find({ username: username });
   if (checkUser.length > 0) {
     return res.status(400).json({ message: "User already exists" });
-  } 
+  }
   var user = await userService.createUser({
     username,
     passwordHash,
@@ -20,15 +20,12 @@ async function signup(req, res) {
     lastName,
     role,
     status,
-    
   });
-    return res.json(user);
+  return res.json(user);
 }
 async function editUser(req, res) {
-  console.log(req.body, 'body', req.params, 'id');
-  
   const id = req.params?.id;
-  const { username, firstName, lastName, role,status } = req.body;
+  const { username, firstName, lastName, role, status, team } = req.body;
   var user = await userService.editUser({
     id,
     username,
@@ -36,6 +33,7 @@ async function editUser(req, res) {
     lastName,
     role,
     status,
+    team,
     // password:'',
   });
   if (!user) {
@@ -85,7 +83,7 @@ async function deleteAvatar(req, res) {
 }
 
 async function searchUser(req, res) {
-  console.log(req.query, 'search');
+  console.log(req.query, "search");
   // return;
   const search = req.query?.search;
   var query = await userService.search(search);
@@ -93,7 +91,7 @@ async function searchUser(req, res) {
 }
 
 async function removeUser(req, res) {
-  console.log(req.params , 'id');
+  console.log(req.params, "id");
   const id = req.params?.id;
   var user = await userService.removeUser(id);
   if (user) {
@@ -174,7 +172,6 @@ function revokeToken(req, res, next) {
 }
 
 async function getAll(req, res, next) {
-
   const search = req.query?.search || "";
   // return;
   // try {
@@ -192,15 +189,12 @@ async function getAll(req, res, next) {
 
   if (req.query.search) {
     searchObj = {
-     
       username: { $regex: ".*" + req.query.search + ".*" },
-        
     };
   }
- 
+
   try {
-    let data = await User
-    .find(searchObj)
+    let data = await User.find(searchObj)
       .skip(pageSize * pageIndex - pageSize)
       .limit(parseInt(pageSize))
       .populate("role")
@@ -222,11 +216,10 @@ async function getAll(req, res, next) {
     let response = new ResponseModel(404, error.message, error);
     res.status(404).json(response);
   }
-
 }
 
 function getById(req, res, next) {
-    // console.log(req.user, 'ádadsa');
+  // console.log(req.user, 'ádadsa');
   // regular users can get their own record and admins can get any record
   // if (req.params.id !== req.user.id && req.user.role.name !== Role.Admin) {
   //   return res.status(401).json({ message: "Unauthorized" });
