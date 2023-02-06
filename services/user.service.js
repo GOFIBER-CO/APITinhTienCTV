@@ -42,6 +42,7 @@ async function createUser({
   lastName,
   role,
   status,
+  team
 }) {
   const userQuery = await User.findOne({ username });
   const roleQuery = await Role.findOne({name: role});
@@ -53,6 +54,7 @@ async function createUser({
       passwordHash: bcrypt.hashSync(passwordHash, 10),
       status: status,
       role: roleQuery?.name,
+      team: team
       // avatar:avatar,
     });
     await user.save();

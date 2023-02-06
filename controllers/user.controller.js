@@ -8,7 +8,7 @@ const PagedModel = require("../models/PagedModel");
 
 async function signup(req, res) {
   
-  const { username, passwordHash, firstName, lastName, role, status } = req.body;
+  const { username, passwordHash, firstName, lastName, role, status, team } = req.body;
   const checkUser = await userModel.find({username: username})
   if (checkUser.length > 0) {
     return res.status(400).json({ message: "User already exists" });
@@ -20,7 +20,7 @@ async function signup(req, res) {
     lastName,
     role,
     status,
-    
+    team
   });
     return res.json(user);
 }

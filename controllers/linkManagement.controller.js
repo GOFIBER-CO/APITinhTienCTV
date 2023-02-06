@@ -585,8 +585,8 @@ const remove = async (req, res) => {
 
 const getLinkManagementsByCollaboratorId = async (req, res) => {
   try {
-    const { brand, domainId, team, coladId } = req.query;
-
+    const { brand, domainId, coladId } = req.query;
+    const team = req.team
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";

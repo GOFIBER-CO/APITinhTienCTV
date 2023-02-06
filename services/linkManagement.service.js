@@ -317,9 +317,7 @@ const getAllLinkManagementsByCollaboratorId = async (
                       : { $ne: null },
                   },
                   {
-                    "domain.team._id": team
-                      ? mongoose.Types.ObjectId(team)
-                      : { $ne: null },
+                    "domain.team._id": mongoose.Types.ObjectId(team)
                   },
                 ],
               },

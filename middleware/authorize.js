@@ -11,7 +11,7 @@ function authorize(func = "", permission = "") {
     async (req, res, next) => {
       try {
         const user = await User.findById(req.user.id);
-
+        req.team = user?.team
         if (!user) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -28,7 +28,6 @@ function authorize(func = "", permission = "") {
         //   if (!checkFlag)
         //     return res.status(401).json({ message: "Unauthorized" });
         // }
-        console.log(user, "asdaaasdasdasdasdss");
         // req.user.role = user.role;
         const refreshTokens = await RefreshToken.find({ user: user.id });
         req.user.ownsToken = (token) =>

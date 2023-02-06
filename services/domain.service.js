@@ -54,7 +54,6 @@ const search = async (
   pageIndex = 1,
   search = "",
   dateFrom,
-  dateTo
 ) => {
   try {
     let searchObj = {};

@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
     },
+    team:{
+      type: mongoose.Types.ObjectId,
+      ref:"Team"
+    }
   },
   { timestamps: true }
 );
