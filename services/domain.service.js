@@ -54,12 +54,20 @@ const search = async (
   pageIndex = 1,
   search = "",
   dateFrom,
-  dateTo
+  dateTo,
+  team = "",
+  brand = ""
 ) => {
   try {
     let searchObj = {};
     if (search) {
       searchObj.name = { $regex: ".*" + search + ".*" };
+    }
+    if (team && team !== "undefined") {
+      searchObj.team = team;
+    }
+    if (brand && brand !== "undefined") {
+      searchObj.brand = brand;
     }
     if (dateFrom !== "" && dateTo !== "") {
       searchObj.createdAt = { $gte: dateFrom, $lte: dateTo };

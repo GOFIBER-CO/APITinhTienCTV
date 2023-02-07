@@ -72,6 +72,7 @@ class TeamController {
       const pageSize = req.query.pageSize || 10;
       const pageIndex = req.query.pageIndex || 1;
       const search = req.query.search || "";
+      const brand = req.query.brand || ""
       const dateFrom =
         req.query.dateFrom !== "undefined"
           ? new Date(req.query.dateFrom)
@@ -85,6 +86,9 @@ class TeamController {
         // { $regex: ".*" + search + ".*" };
         // searchQuery = { name: { $regex: search, $options: "i" } };
         searchQuery.name = { $regex: ".*" + search + ".*" };
+      }
+      if(brand){
+        searchQuery.brand = brand
       }
       if (
         req.query.dateFrom !== "undefined" &&
