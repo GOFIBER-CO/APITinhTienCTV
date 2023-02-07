@@ -16,8 +16,8 @@ const search = async (req, res) => {
       req.query.dateFrom !== "undefined" ? new Date(req.query.dateFrom) : "";
     const dateTo =
       req.query.dateTo !== "undefined" ? new Date(req.query.dateTo) : "";
-    const team = req.query.team || "";
-    const brand = req.query.brand || "";
+    const team = req.query.team;
+    const brand = req.query.brand;
     const data = await DomainService.search(
       pageSize,
       pageIndex,

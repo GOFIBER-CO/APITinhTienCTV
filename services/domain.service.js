@@ -63,11 +63,11 @@ const search = async (
     if (search) {
       searchObj.name = { $regex: ".*" + search + ".*" };
     }
-    if(team){
-      searchObj.team = team
+    if (team && team !== "undefined") {
+      searchObj.team = team;
     }
-    if(brand){
-      searchObj.brand = brand
+    if (brand && brand !== "undefined") {
+      searchObj.brand = brand;
     }
     if (dateFrom !== "" && dateTo !== "") {
       searchObj.createdAt = { $gte: dateFrom, $lte: dateTo };
