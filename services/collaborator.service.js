@@ -189,6 +189,14 @@ const getCollaboratorsByDomainId = async (
       },
       {
         $lookup: {
+          from: "linkmanagements",
+          localField: "link_management_ids",
+          foreignField: "_id",
+          as: "link_management_ids",
+        },
+      },
+      {
+        $lookup: {
           from: "domains",
           localField: "domain_id",
           foreignField: "_id",
@@ -333,7 +341,7 @@ const getCollaboratorsByDomainId = async (
             : { $ne: null },
         },
       },
-    ]).count;
+    ]);
     let totalPages = Math.ceil(count?.length / pageSize);
     return {
       pageIndex,

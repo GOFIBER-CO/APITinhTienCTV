@@ -45,7 +45,7 @@ async function createUser({
   team
 }) {
   const userQuery = await User.findOne({ username });
-  const roleQuery = await Role.findOne({name: role});
+  const roleQuery = await Role.findOne({ name: role });
   if (!userQuery && roleQuery) {
     let user = new User({
       firstName: firstName,
@@ -70,10 +70,11 @@ async function editUser({
   lastName,
   role,
   status,
+  team,
 }) {
-  const roleQuery = await Role.findOne({name: role});
+  const roleQuery = await Role.findOne({ name: role });
   // var userQuery = await userModel.findById(id);
-  
+
   // return;
   // if (roleQuery && userQuery) {
   var update = {
@@ -82,11 +83,11 @@ async function editUser({
     lastName: lastName,
     role: roleQuery.name,
     status: status,
-
+    team: team,
     // passwordHash:
     //   // password && password.length
     //   //   ? bcrypt.hashSync(password, 10)
-    //     // : 
+    //     // :
     //     userQuery.passwordHash,
   };
   try {
