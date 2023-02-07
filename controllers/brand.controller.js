@@ -41,7 +41,6 @@ const getById = async (req, res) => {
 const getAll = async (req, res) => {
   try {
     const brand = await BrandService.getAll();
-
     return res.status(200).json({
       success: true,
       message: "Success",

@@ -90,14 +90,14 @@ server.listen(portServer, () => {
 
 const portSocketIO = process.env.CLIENT_PORTSOCKETIO || 8003;
 
-const io = require("socket.io")(portSocketIO);
+// const io = require("socket.io")(portSocketIO);
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello world</h1>");
 });
-io.on("connection", (socket) => {
-  console.log("a user connected" + socket.id);
-});
+// io.on("connection", (socket) => {
+//   console.log("a user connected" + socket.id);
+// });
 
 app.use("/api", userRoutes);
 app.use("/api", domainRoutes);

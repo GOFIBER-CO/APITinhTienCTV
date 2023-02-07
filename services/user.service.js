@@ -42,7 +42,7 @@ async function createUser({
   lastName,
   role,
   status,
-  team
+  team,
 }) {
   const userQuery = await User.findOne({ username });
   const roleQuery = await Role.findOne({ name: role });
@@ -54,7 +54,7 @@ async function createUser({
       passwordHash: bcrypt.hashSync(passwordHash, 10),
       status: status,
       role: roleQuery?.name,
-      team: team
+      team: team,
       // avatar:avatar,
     });
     await user.save();
@@ -160,7 +160,7 @@ async function removeUser(id) {
 }
 
 async function authenticate({ username, password, ipAddress }) {
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).populate("team");
   console.log(user, "asdasdasdas");
   if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
     return {
@@ -297,8 +297,9 @@ function randomTokenString() {
 }
 
 function basicDetails(user) {
-  const { id, firstName, lastName, username, role, avatar, status } = user;
-  return { id, firstName, lastName, username, role, avatar, status };
+  const { id, firstName, lastName, username, role, avatar, status, team } =
+    user;
+  return { id, firstName, lastName, username, role, avatar, status, team };
 }
 
 function basicDetails1(user) {

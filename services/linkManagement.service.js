@@ -317,7 +317,9 @@ const getAllLinkManagementsByCollaboratorId = async (
                       : { $ne: null },
                   },
                   {
-                    "domain.team._id": mongoose.Types.ObjectId(team)
+                    "domain.team._id": team
+                      ? mongoose.Types.ObjectId(team)
+                      : { $ne: null },
                   },
                 ],
               },
@@ -338,7 +340,6 @@ const getAllLinkManagementsByCollaboratorId = async (
                 ? mongoose.Types.ObjectId(team)
                 : { $ne: null },
             },
-
             {
               "collaborators._id": colabId
                 ? mongoose.Types.ObjectId(colabId)
@@ -477,6 +478,7 @@ const getAllLinkManagementsByCollaboratorId = async (
       totalPages,
     };
   } catch (error) {
+    console.log(error, "aa");
     throw error;
   }
 };
