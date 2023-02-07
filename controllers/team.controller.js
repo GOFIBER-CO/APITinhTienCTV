@@ -172,6 +172,61 @@ class TeamController {
       return res.status(500).json({ success: false, message: error });
     }
   }
+  async getStatisticTeam(req, res) {
+    try {
+      const id = req.query.id;
+      const data = await Team.aggregate([
+        {
+          $match: {
+            id: id,
+          },
+        },
+        {
+          $lookup: {
+            from: "domains",
+            localField: "_id",
+            foreignField: "team",
+            as: "domains",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "collaborators",
+                  localField: "_id",
+                  foreignField: "domain_id",
+                  as: "collaborators",
+                  pipeline: [
+                    {
+                      $lookup: {
+                        from: "linkmanagements",
+                        localField: "link_management_ids",
+                        foreignField: "_id",
+                        as: "linkmanagements",
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $lookup: {
+                  from: "brands",
+                  localField: "brand",
+                  foreignField: "_id",
+                  as: "brand",
+                },
+              },
+              {
+                $unwind: "$brand",
+              },
+            ],
+          },
+        },
+      ]);
+      return res.status(200).json({ success: true, data });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ success: false, message: error });
+    }
+  }
   async getAll(req, res) {
     try {
       const brand = req.params.brand || "";
