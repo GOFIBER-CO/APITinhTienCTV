@@ -29,7 +29,8 @@ const userSchema = new mongoose.Schema(
     },
     team:{
       type: mongoose.Types.ObjectId,
-      ref:"Team"
+      ref:"Team",
+      required: true
     }
   },
   { timestamps: true }

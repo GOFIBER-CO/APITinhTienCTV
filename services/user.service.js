@@ -303,10 +303,10 @@ function basicDetails(user) {
 }
 
 function basicDetails1(user) {
-  const { id, firstName, lastName, username, role, avatar, status } = user;
-  console.log(user, "user");
+  const { id, firstName, lastName, username, role, avatar, status ,team} = user;
+  // console.log(user, "user");
 
-  return { id, firstName, lastName, username, role, avatar, status };
+  return { id, firstName, lastName, username, role, avatar, status, team };
 }
 
 async function createUserPermission({ userId, fieldName, view, edit, del }) {
