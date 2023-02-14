@@ -17,7 +17,7 @@ const create = async (data) => {
         }),
       };
     }
-
+    console.log(data, "asdasds");
     const domain = new Domain();
 
     domain.name = name;
