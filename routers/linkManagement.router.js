@@ -13,10 +13,12 @@ const {
   getLinkManagementsByTeamId,
   getLinkManagementsByBrandId,
   getLinkManagementsByTeamUser,
-  createExcel
+  createExcel,
+  exportExcelTeam
 } = require("../controllers/linkManagement.controller");
 const Role = require("../helpers/role");
 
+router.get("/link-managements-excel-teams", exportExcelTeam)
 router.get("/link-managements", authorize(), search);
 router.get("/link-managements/getById/:id", authorize(), getById);
 router.post("/link-managements", authorize(), create);

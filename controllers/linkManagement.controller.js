@@ -54,7 +54,6 @@ const getById = async (req, res) => {
 const createExcel = async (req, res) => {
   try {
     const data = req.body
-    
   const result = await Promise.all(data.map(async(item)=>{
     // console.log(item,'item');
     let a ={
@@ -66,9 +65,12 @@ const createExcel = async (req, res) => {
       collaboratorId: item?.collaboratorId,
       domain: item?.domain,
       price_per_word: item?.price_per_word,
+      total: item?.total
     }
 
-    const { link_post,link_posted, status,category, keyword,collaboratorId,price_per_word} = a;
+    const { link_post,link_posted, status,category, keyword,collaboratorId,price_per_word, total} = a;
+    // console.log(a, 'dât');
+    // return
     
     const collaborators = await Collaborator.aggregate([
       {
@@ -149,15 +151,18 @@ const createExcel = async (req, res) => {
     );
 
     const PRICE = price_per_word;
-    // const totalPrices = Number(total);
+    const totalPrices = Number(total);
    
+   
+    // return
     const data = {
       ...a,
       status: Number(status || LINK_STATUS.PENDING),
       number_images: number_image,
-      number_words: number_word,
+      number_words: number_word ,
       title,
-      total: number_word * PRICE ,
+      total: number_word * PRICE || totalPrices
+       ,
     };
 
     const linkManagement = await LinkManagementService.create(data);
@@ -170,14 +175,16 @@ const createExcel = async (req, res) => {
       link_management_ids,
     }  = collaborator;
    
+    
 
-    const newTotal = number_word * PRICE ;
+    const newTotal = number_word * PRICE || totalPrices ;
+   
     
     let newCollaborator = {
       number_words: Number(oldNumberWord) + number_word,
-      total: Number(collaborator?.total || 0) + newTotal,
+      total:  newTotal,
     };
-
+    
    
     if (linkManagement?._id){
       newCollaborator.link_management_ids = [
@@ -187,18 +194,15 @@ const createExcel = async (req, res) => {
      
     }
     
-    // console.log(newCollaborator,'newCollaborator');
-    
-   
-    // return
+
     const newDomain = {
-      total: Number(domain?.total || 0) + newTotal,
+      total:  newTotal,
     };
     const newTeam = {
-      total: Number(team?.total || 0) + newTotal,
+      total: newTotal,
     };
     const newBrand = {
-      total: Number(brand?.total || 0) + newTotal,
+      total: newTotal,
     };
     const updateCollaborator = async () =>{ 
       const colab = await Collaborator.updateOne(
@@ -209,8 +213,10 @@ const createExcel = async (req, res) => {
           $addToSet: {
             link_management_ids: newCollaborator?.link_management_ids
           },
-          number_words: newCollaborator.number_words,
-          total: newCollaborator.total,
+          number_words: Number(newCollaborator.number_words || '1'),
+          $inc:{
+            total: +newCollaborator.total,
+          }
         },
         { upsert: true }
       );
@@ -222,9 +228,14 @@ const createExcel = async (req, res) => {
       {
         _id: domain?._id,
       },
-      {
-        $set: newDomain,
+     {
+      $inc:{
+        total: +newDomain.total,
       },
+     },
+      // {
+      //   $set: newDomain,
+      // },
       { upsert: true }
     
     );
@@ -236,8 +247,13 @@ const createExcel = async (req, res) => {
         _id: team?._id,
       },
       {
-        $set: newTeam,
-      },
+        $inc:{
+          total: +newTeam.total,
+        },
+       },
+      // {
+      //   $set: newTeam,
+      // },
       { upsert: true }
     );
     return team1;
@@ -248,8 +264,13 @@ const createExcel = async (req, res) => {
             _id: brand?._id,
           },
           {
-            $set: newBrand,
-          },
+            $inc:{
+              total: +newBrand.total,
+            },
+           },
+          // {
+          //   $set: newBrand,
+          // },
           { upsert: true }
         );
         return brand1;
@@ -369,7 +390,7 @@ const create = async (req, res) => {
 
     const PRICE = req.body.price_per_word;
     const totalPrices = Number(req.body.total);
-    console.log(PRICE, "aaa", totalPrices);
+    
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
@@ -813,6 +834,25 @@ const remove = async (req, res) => {
   }
 };
 
+const exportExcelTeam = async(req, res) =>{
+  try {
+      const {brand, team} = req.query
+      const data = await LinkManagementService.getAllLinkManagementsExcelTeam(brand, team)
+    //   let searchObj = {}
+    // if (brand) {
+    //     searchObj = { roleName: { $regex: '.*' + req.query.search + '.*' } }
+    // }
+    //   let data = await LinkManagement.find()
+
+      return res.status(200).json(data)
+  } catch (error) {
+    console.log(error);
+    dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+}
 const getLinkManagementsByCollaboratorId = async (req, res) => {
   try {
     const { brand, domainId, coladId } = req.query;
@@ -1213,5 +1253,6 @@ module.exports = {
   getLinkManagementsByTeamId,
   getLinkManagementsByBrandId,
   getLinkManagementsByTeamUser,
-  createExcel
+  createExcel,
+  exportExcelTeam
 };

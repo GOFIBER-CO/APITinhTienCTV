@@ -105,6 +105,79 @@ const getById = async (id) => {
   }
 };
 
+const getAllLinkManagementsExcelTeam = async(brand ="", team = "")=>{
+  try {
+    const data = await LinkManagement.aggregate([[
+      {
+        $lookup:{
+          from:"collaborators",
+          localField:"_id",
+          foreignField:"link_management_ids",
+          as:"collaborators",
+          pipeline:[
+            {
+              $lookup:{
+                from:"domains",
+                localField:"domain_id",
+                foreignField:"_id",
+                as:"domain",
+                pipeline: [
+                  {
+                    $match: {
+                      brand: brand
+                        ? mongoose.Types.ObjectId(brand)
+                        : { $ne: null },
+                    },
+                  },
+                  {
+                    $lookup: {
+                      from: "brands",
+                      localField: "brand",
+                      foreignField: "_id",
+                      as: "brand",
+                    },
+                  },
+                  {
+                    $lookup: {
+                      from: "teams",
+                      localField: "team",
+                      foreignField: "_id",
+                      as: "team",
+                    },
+                  },
+                  {
+                    $match: {
+                      $and: [
+                        {
+                          "domain.brand._id": brand
+                            ? mongoose.Types.ObjectId(brand)
+                            : { $ne: null },
+                        },
+                        {
+                          "domain.team._id": team
+                            ? mongoose.Types.ObjectId(team)
+                            : { $ne: null },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }
+            }
+          ],
+
+        },
+        //
+        
+      }
+    ]])
+    
+    return data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 const getAllLinkManagementsByCollaboratorId = async (
   domainId = "",
   team = "",
@@ -469,4 +542,5 @@ module.exports = {
   getById,
   getAllLinkManagementsByCollaboratorId,
   getAllLinkManagementsByDomainId,
+  getAllLinkManagementsExcelTeam
 };
