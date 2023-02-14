@@ -53,240 +53,251 @@ const getById = async (req, res) => {
 
 const createExcel = async (req, res) => {
   try {
-    const data = req.body
-  const result = await Promise.all(data.map(async(item)=>{
-    // console.log(item,'item');
-    let a ={
-      link_post : item?.link_post,
-      link_posted: item?.link_posted,
-      status: item?.status,
-      category: item?.category,
-      keyword: item?.keyword,
-      collaboratorId: item?.collaboratorId,
-      domain: item?.domain,
-      price_per_word: item?.price_per_word,
-      total: item?.total
-    }
+    const data = req.body;
+    const result = await Promise.all(
+      data.map(async (item) => {
+        // console.log(item,'item');
+        let a = {
+          link_post: item?.link_post,
+          link_posted: item?.link_posted,
+          status: item?.status,
+          category: item?.category,
+          keyword: item?.keyword,
+          collaboratorId: item?.collaboratorId,
+          domain: item?.domain,
+          price_per_word: item?.price_per_word,
+          total: item?.total,
+        };
 
-    const { link_post,link_posted, status,category, keyword,collaboratorId,price_per_word, total} = a;
-    // console.log(a, 'dât');
-    // return
-    
-    const collaborators = await Collaborator.aggregate([
-      {
-        $addFields: {
-          collaboratorId: {
-            $toString: "$_id",
-          },
-        },
-      },
-      {
-        $match: {
-          collaboratorId,
-        },
-      },
-      {
-        $lookup: {
-          from: "domains",
-          localField: "domain_id",
-          foreignField: "_id",
-          as: "domain",
-        },
-      },
-      {
-        $unwind: "$domain",
-      },
-      {
-        $lookup: {
-          from: "teams",
-          localField: "domain.team",
-          foreignField: "_id",
-          as: "team",
-        },
-      },
-      // {
-      //   $unwind:"$domain.team"
-      // },
-      {
-        $lookup: {
-          from: "brands",
-          localField: "team.brand",
-          foreignField: "_id",
-          as: "brand",
-        },
-      },
-      {
-        $unwind: "$team",
-      },
-      {
-        $unwind: "$brand",
-      },
-    ]);
-    const [collaborator] = collaborators;
-    if (!keyword || !link_post || !category) {
-      return res.status(400).json({
-        message: "Vui lòng nhập thông tin",
-        description: genFieldsRequire({
-          keyword,
+        const {
           link_post,
+          link_posted,
+          status,
           category,
-        }),
-      });
-    }
+          keyword,
+          collaboratorId,
+          price_per_word,
+          total,
+        } = a;
+        // console.log(a, 'dât');
+        // return
 
-    if (!link_post)
-      return res.status(400).json({ messages: `Link post not exist` });
-
-    const link_id = link_post.substring(
-      link_post.lastIndexOf("/d/") + 3,
-      link_post.indexOf("/edit")
-    );
-
-    const doc = await googleDoc.printDoc(link_id);
-    const { title, body, inlineObjects } = doc?.data;
-
-    const { number_image, number_word } = parseNumberOfWord(
-      body,
-      inlineObjects
-    );
-
-    const PRICE = price_per_word;
-    const totalPrices = Number(total);
-   
-   
-    // return
-    const data = {
-      ...a,
-      status: Number(status || LINK_STATUS.PENDING),
-      number_images: number_image,
-      number_words: number_word ,
-      title,
-      total: number_word * PRICE || totalPrices
-       ,
-    };
-
-    const linkManagement = await LinkManagementService.create(data);
-    
-    const {
-      number_words: oldNumberWord,
-      domain ,
-      team,
-      brand,
-      link_management_ids,
-    }  = collaborator;
-   
-    
-
-    const newTotal = number_word * PRICE || totalPrices ;
-   
-    
-    let newCollaborator = {
-      number_words: Number(oldNumberWord) + number_word,
-      total:  newTotal,
-    };
-    
-   
-    if (linkManagement?._id){
-      newCollaborator.link_management_ids = [
-        ...(link_management_ids || []),
-        linkManagement._id,
-      ];
-     
-    }
-    
-
-    const newDomain = {
-      total:  newTotal,
-    };
-    const newTeam = {
-      total: newTotal,
-    };
-    const newBrand = {
-      total: newTotal,
-    };
-    const updateCollaborator = async () =>{ 
-      const colab = await Collaborator.updateOne(
-        {
-          _id: collaborator?._id,
-        },
-        {
-          $addToSet: {
-            link_management_ids: newCollaborator?.link_management_ids
-          },
-          number_words: Number(newCollaborator.number_words || '1'),
-          $inc:{
-            total: +newCollaborator.total,
-          }
-        },
-        { upsert: true }
-      );
-
-     return colab
-    }
-    const updateDomain = async () => {
-      const domain1 = await Domain.updateOne(
-      {
-        _id: domain?._id,
-      },
-     {
-      $inc:{
-        total: +newDomain.total,
-      },
-     },
-      // {
-      //   $set: newDomain,
-      // },
-      { upsert: true }
-    
-    );
-    return domain1
-    }
-    const updateTeam = async () =>{
-      const team1 = await Team.updateOne(
-      {
-        _id: team?._id,
-      },
-      {
-        $inc:{
-          total: +newTeam.total,
-        },
-       },
-      // {
-      //   $set: newTeam,
-      // },
-      { upsert: true }
-    );
-    return team1;
-  } 
-    const updateBrand = async () =>{
-        const brand1 = await Brand.updateOne(
+        const collaborators = await Collaborator.aggregate([
           {
-            _id: brand?._id,
-          },
-          {
-            $inc:{
-              total: +newBrand.total,
+            $addFields: {
+              collaboratorId: {
+                $toString: "$_id",
+              },
             },
-           },
+          },
+          {
+            $match: {
+              collaboratorId,
+            },
+          },
+          {
+            $lookup: {
+              from: "domains",
+              localField: "domain_id",
+              foreignField: "_id",
+              as: "domain",
+            },
+          },
+          {
+            $unwind: "$domain",
+          },
+          {
+            $lookup: {
+              from: "teams",
+              localField: "domain.team",
+              foreignField: "_id",
+              as: "team",
+            },
+          },
           // {
-          //   $set: newBrand,
+          //   $unwind:"$domain.team"
           // },
-          { upsert: true }
-        );
-        return brand1;
-    } 
+          {
+            $lookup: {
+              from: "brands",
+              localField: "team.brand",
+              foreignField: "_id",
+              as: "brand",
+            },
+          },
+          {
+            $unwind: "$team",
+          },
+          {
+            $unwind: "$brand",
+          },
+        ]);
+        const [collaborator] = collaborators;
+        if (!keyword || !link_post || !category) {
+          return res.status(400).json({
+            message: "Vui lòng nhập thông tin",
+            description: genFieldsRequire({
+              keyword,
+              link_post,
+              category,
+            }),
+          });
+        }
 
-    // console.log(updateCollaborator,updateDomain,updateTeam, updateBrand,'newCollaborator');
-      // return
-    const [colabs, domains, brands, teams] = await Promise.all([updateCollaborator(), updateDomain(), updateBrand(), updateTeam()])
-    return {
-      colabs, domains, brands, teams
-    }
-    console.log('asdasd')
-    await updateCollaborator()
-    return 'success'
-  })) 
-  return res.status(200).json({message: "success", status: 1})
+        if (!link_post)
+          return res.status(400).json({ messages: `Link post not exist` });
+
+        const link_id = link_post.substring(
+          link_post.lastIndexOf("/d/") + 3,
+          link_post.indexOf("/edit")
+        );
+
+        const doc = await googleDoc.printDoc(link_id);
+        const { title, body, inlineObjects } = doc?.data;
+
+        const { number_image, number_word } = parseNumberOfWord(
+          body,
+          inlineObjects
+        );
+
+        const PRICE = price_per_word;
+        const totalPrices = Number(total);
+
+        // return
+        const data = {
+          ...a,
+          status: Number(status || LINK_STATUS.PENDING),
+          number_images: number_image,
+          number_words: number_word,
+          title,
+          total: number_word * PRICE || totalPrices,
+        };
+
+        const linkManagement = await LinkManagementService.create(data);
+
+        const {
+          number_words: oldNumberWord,
+          domain,
+          team,
+          brand,
+          link_management_ids,
+        } = collaborator;
+
+        const newTotal = number_word * PRICE || totalPrices;
+
+        let newCollaborator = {
+          number_words: Number(oldNumberWord) + number_word,
+          total: newTotal,
+        };
+
+        if (linkManagement?._id) {
+          newCollaborator.link_management_ids = [
+            ...(link_management_ids || []),
+            linkManagement._id,
+          ];
+        }
+
+        const newDomain = {
+          total: newTotal,
+        };
+        const newTeam = {
+          total: newTotal,
+        };
+        const newBrand = {
+          total: newTotal,
+        };
+        const updateCollaborator = async () => {
+          const colab = await Collaborator.updateOne(
+            {
+              _id: collaborator?._id,
+            },
+            {
+              $addToSet: {
+                link_management_ids: newCollaborator?.link_management_ids,
+              },
+              number_words: Number(newCollaborator.number_words || "1"),
+              $inc: {
+                total: +newCollaborator.total,
+              },
+            },
+            { upsert: true }
+          );
+
+          return colab;
+        };
+        const updateDomain = async () => {
+          const domain1 = await Domain.updateOne(
+            {
+              _id: domain?._id,
+            },
+            {
+              $inc: {
+                total: +newDomain.total,
+              },
+            },
+            // {
+            //   $set: newDomain,
+            // },
+            { upsert: true }
+          );
+          return domain1;
+        };
+        const updateTeam = async () => {
+          const team1 = await Team.updateOne(
+            {
+              _id: team?._id,
+            },
+            {
+              $inc: {
+                total: +newTeam.total,
+              },
+            },
+            // {
+            //   $set: newTeam,
+            // },
+            { upsert: true }
+          );
+          return team1;
+        };
+        const updateBrand = async () => {
+          const brand1 = await Brand.updateOne(
+            {
+              _id: brand?._id,
+            },
+            {
+              $inc: {
+                total: +newBrand.total,
+              },
+            },
+            // {
+            //   $set: newBrand,
+            // },
+            { upsert: true }
+          );
+          return brand1;
+        };
+
+        // console.log(updateCollaborator,updateDomain,updateTeam, updateBrand,'newCollaborator');
+        // return
+        const [colabs, domains, brands, teams] = await Promise.all([
+          updateCollaborator(),
+          updateDomain(),
+          updateBrand(),
+          updateTeam(),
+        ]);
+        // return {
+        //   colabs, domains, brands, teams
+        // }
+        // console.log('asdasd')
+        // await updateCollaborator()
+        // return 'success'
+      })
+    )
+      .then((result) => console.log(result))
+      .catch((error) => {
+        console.log(console.error());
+      });
+    return res.status(200).json({ message: "success", status: 1 });
   } catch (error) {
     console.log(error);
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
@@ -294,11 +305,8 @@ const createExcel = async (req, res) => {
       message: error?.message,
     });
   }
-  
-  
 };
 const create = async (req, res) => {
- 
   // return
   try {
     const { link_post, keyword, status, category, collaboratorId } = req.body;
@@ -390,7 +398,7 @@ const create = async (req, res) => {
 
     const PRICE = req.body.price_per_word;
     const totalPrices = Number(req.body.total);
-    
+
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
@@ -834,17 +842,20 @@ const remove = async (req, res) => {
   }
 };
 
-const exportExcelTeam = async(req, res) =>{
+const exportExcelTeam = async (req, res) => {
   try {
-      const {brand, team} = req.query
-      const data = await LinkManagementService.getAllLinkManagementsExcelTeam(brand, team)
+    const { brand, team } = req.query;
+    const data = await LinkManagementService.getAllLinkManagementsExcelTeam(
+      brand,
+      team
+    );
     //   let searchObj = {}
     // if (brand) {
     //     searchObj = { roleName: { $regex: '.*' + req.query.search + '.*' } }
     // }
     //   let data = await LinkManagement.find()
 
-      return res.status(200).json(data)
+    return res.status(200).json(data);
   } catch (error) {
     console.log(error);
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
@@ -852,7 +863,7 @@ const exportExcelTeam = async(req, res) =>{
       message: error.message,
     });
   }
-}
+};
 const getLinkManagementsByCollaboratorId = async (req, res) => {
   try {
     const { brand, domainId, coladId } = req.query;
@@ -1254,5 +1265,5 @@ module.exports = {
   getLinkManagementsByBrandId,
   getLinkManagementsByTeamUser,
   createExcel,
-  exportExcelTeam
+  exportExcelTeam,
 };
