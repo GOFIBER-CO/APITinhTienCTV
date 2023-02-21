@@ -54,6 +54,8 @@ const getById = async (req, res) => {
 const createExcel = async (req, res) => {
   try {
     const data = req.body;
+    let countSuccess = 0;
+    let countMatch = 0;
     const result = await Promise.all(
       data.map(async (item) => {
         // console.log(item,'item');
@@ -67,6 +69,8 @@ const createExcel = async (req, res) => {
           domain: item?.domain,
           price_per_word: item?.price_per_word,
           total: item?.total,
+          isPosted: item?.isPosted || 0,
+          isDesign: item?.isDesign || 0,
         };
 
         const {
@@ -78,10 +82,20 @@ const createExcel = async (req, res) => {
           collaboratorId,
           price_per_word,
           total,
+          isDesign,
+          isPosted,
         } = a;
         // console.log(a, 'dât');
         // return
-
+        let id_post = link_post?.split("/")[5];
+        const checkExists = await LinkManagement.findOne({
+          link_post: { $regex: id_post },
+        });
+        console.log(checkExists, "asdsadsa");
+        if (checkExists) {
+          countMatch++;
+          return;
+        }
         const collaborators = await Collaborator.aggregate([
           {
             $addFields: {
@@ -162,7 +176,8 @@ const createExcel = async (req, res) => {
 
         const PRICE = price_per_word;
         const totalPrices = Number(total);
-
+        const totalExtras =
+          (isPosted === 1 ? 5000 : 0) + (isDesign ? 20000 : 0);
         // return
         const data = {
           ...a,
@@ -170,7 +185,7 @@ const createExcel = async (req, res) => {
           number_images: number_image,
           number_words: number_word,
           title,
-          total: number_word * PRICE || totalPrices,
+          total: (number_word * PRICE || totalPrices) + totalExtras,
         };
 
         const linkManagement = await LinkManagementService.create(data);
@@ -183,7 +198,7 @@ const createExcel = async (req, res) => {
           link_management_ids,
         } = collaborator;
 
-        const newTotal = number_word * PRICE || totalPrices;
+        const newTotal = (number_word * PRICE || totalPrices) + totalExtras;
 
         let newCollaborator = {
           number_words: Number(oldNumberWord) + number_word,
@@ -285,19 +300,17 @@ const createExcel = async (req, res) => {
           updateBrand(),
           updateTeam(),
         ]);
-        // return {
-        //   colabs, domains, brands, teams
-        // }
-        // console.log('asdasd')
-        // await updateCollaborator()
-        // return 'success'
+        countSuccess++;
+        return true;
       })
     )
-      .then((result) => console.log(result))
+      .then((result) => console.log(result, "aaaaa"))
       .catch((error) => {
-        console.log(console.error());
+        console.log(error, "asdasd");
       });
-    return res.status(200).json({ message: "success", status: 1 });
+    return res
+      .status(200)
+      .json({ message: "success", status: 1, countSuccess, countMatch });
   } catch (error) {
     console.log(error);
     dashLogger.error(`Error : ${error}, Request : ${req.originalUrl}`);
@@ -309,8 +322,24 @@ const createExcel = async (req, res) => {
 const create = async (req, res) => {
   // return
   try {
-    const { link_post, keyword, status, category, collaboratorId } = req.body;
+    const {
+      link_post,
+      keyword,
+      status,
+      category,
+      collaboratorId,
+      isPosted,
+      isDesign,
+    } = req.body;
+    let id_post = link_post?.split("/")[5];
+    //check if exists link
+    const checkExists = await LinkManagement.findOne({
+      link_post: { $regex: id_post },
+    });
 
+    if (checkExists) {
+      return res.json({ success: false, message: "Bài post đã tồn tại!" });
+    }
     const collaborators = await Collaborator.aggregate([
       {
         $addFields: {
@@ -398,15 +427,16 @@ const create = async (req, res) => {
 
     const PRICE = req.body.price_per_word;
     const totalPrices = Number(req.body.total);
-
+    const totalExtra = (isPosted ? 5000 : 0) + (isDesign ? 20000 : 0);
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
       number_images: number_image,
       number_words: number_word,
       title,
-      total: number_word * PRICE || totalPrices,
+      total: (number_word * PRICE || totalPrices) + totalExtra,
     };
+    console.log(data, "sdasdasdasdsa");
 
     const linkManagement = await LinkManagementService.create(data);
 
@@ -417,7 +447,7 @@ const create = async (req, res) => {
       brand,
       link_management_ids,
     } = collaborator;
-    const newTotal = number_word * PRICE || totalPrices;
+    const newTotal = (number_word * PRICE || totalPrices) + totalExtra;
 
     const newCollaborator = {
       number_words: Number(oldNumberWord) + number_word,
