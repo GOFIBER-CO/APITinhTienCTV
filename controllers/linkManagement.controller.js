@@ -177,7 +177,8 @@ const createExcel = async (req, res) => {
         const PRICE = price_per_word;
         const totalPrices = Number(total);
         const totalExtras =
-          (isPosted === 1 ? 5000 : 0) + (isDesign ? 20000 : 0);
+          (isPosted === 1 ? Number(process.env.isPosted) : 0) +
+          (isDesign ? Number(process.env.isDesign) : 0);
         // return
         const data = {
           ...a,
@@ -427,7 +428,9 @@ const create = async (req, res) => {
 
     const PRICE = req.body.price_per_word;
     const totalPrices = Number(req.body.total);
-    const totalExtra = (isPosted ? 5000 : 0) + (isDesign ? 20000 : 0);
+    const totalExtra =
+      (isPosted === 1 ? Number(process.env.isPosted) : 0) +
+      (isDesign ? Number(process.env.isDesign) : 0);
     const data = {
       ...req.body,
       status: Number(status || LINK_STATUS.PENDING),
