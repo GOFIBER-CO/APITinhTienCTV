@@ -56,7 +56,6 @@ const getById = async (req, res) => {
 const create = async (req, res) => {
   try {
     const { name } = req.body;
-    console.log(name, "asdsad");
     const checkExist = await Domain.findOne({ name });
 
     if (checkExist)

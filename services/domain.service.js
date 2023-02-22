@@ -5,7 +5,7 @@ const { ObjectId } = require("mongoose").Types.ObjectId;
 
 const create = async (data) => {
   try {
-    const { name, total, team, brand } = data;
+    const { name, total, team, brand, manager } = data;
 
     if (!name || !team || !brand) {
       throw {
@@ -17,14 +17,13 @@ const create = async (data) => {
         }),
       };
     }
-    console.log(data, "asdasds");
     const domain = new Domain();
 
     domain.name = name;
     domain.total = Number(total || 0);
     domain.team = team;
     domain.brand = brand;
-
+    domain.manager = manager || "";
     const newDomain = await domain.save();
 
     return newDomain;

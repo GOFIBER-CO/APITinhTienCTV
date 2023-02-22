@@ -24,6 +24,9 @@ const domainSchema = new mongoose.Schema(
       require: true,
       ref: "Brand",
     },
+    manager: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
