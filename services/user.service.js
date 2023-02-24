@@ -161,7 +161,6 @@ async function removeUser(id) {
 
 async function authenticate({ username, password, ipAddress }) {
   const user = await User.findOne({ username }).populate("team");
-  console.log(user, "asdasdasdas");
   if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
     return {
       status: 0,
@@ -303,7 +302,8 @@ function basicDetails(user) {
 }
 
 function basicDetails1(user) {
-  const { id, firstName, lastName, username, role, avatar, status ,team} = user;
+  const { id, firstName, lastName, username, role, avatar, status, team } =
+    user;
   // console.log(user, "user");
 
   return { id, firstName, lastName, username, role, avatar, status, team };

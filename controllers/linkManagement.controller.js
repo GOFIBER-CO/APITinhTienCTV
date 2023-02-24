@@ -904,6 +904,14 @@ const getLinkManagementsByCollaboratorId = async (req, res) => {
     const pageSize = Number(req.query?.pageSize) || 10;
     const pageIndex = Number(req.query?.pageIndex) || 1;
     const search = req.query?.search || "";
+    const dateFrom =
+      req.query.dateFrom !== "undefined"
+        ? new Date(req.query.dateFrom)
+        : new Date(Date.now() - 30 * 60 * 60 * 24 * 1000);
+    const dateTo =
+      req.query.dateTo !== "undefined"
+        ? new Date(req.query.dateTo)
+        : new Date(Date.now());
     const data =
       await LinkManagementService.getAllLinkManagementsByCollaboratorId(
         domainId,
@@ -912,7 +920,9 @@ const getLinkManagementsByCollaboratorId = async (req, res) => {
         coladId,
         pageIndex,
         pageSize,
-        search
+        search,
+        dateFrom,
+        dateTo
       );
 
     return res.status(200).json(data);

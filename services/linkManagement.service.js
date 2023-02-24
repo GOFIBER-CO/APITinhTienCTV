@@ -105,78 +105,78 @@ const getById = async (id) => {
   }
 };
 
-const getAllLinkManagementsExcelTeam = async(brand ="", team = "")=>{
+const getAllLinkManagementsExcelTeam = async (brand = "", team = "") => {
   try {
-    const data = await LinkManagement.aggregate([[
-      {
-        $lookup:{
-          from:"collaborators",
-          localField:"_id",
-          foreignField:"link_management_ids",
-          as:"collaborators",
-          pipeline:[
-            {
-              $lookup:{
-                from:"domains",
-                localField:"domain_id",
-                foreignField:"_id",
-                as:"domain",
-                pipeline: [
-                  {
-                    $match: {
-                      brand: brand
-                        ? mongoose.Types.ObjectId(brand)
-                        : { $ne: null },
+    const data = await LinkManagement.aggregate([
+      [
+        {
+          $lookup: {
+            from: "collaborators",
+            localField: "_id",
+            foreignField: "link_management_ids",
+            as: "collaborators",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "domains",
+                  localField: "domain_id",
+                  foreignField: "_id",
+                  as: "domain",
+                  pipeline: [
+                    {
+                      $match: {
+                        brand: brand
+                          ? mongoose.Types.ObjectId(brand)
+                          : { $ne: null },
+                      },
                     },
-                  },
-                  {
-                    $lookup: {
-                      from: "brands",
-                      localField: "brand",
-                      foreignField: "_id",
-                      as: "brand",
+                    {
+                      $lookup: {
+                        from: "brands",
+                        localField: "brand",
+                        foreignField: "_id",
+                        as: "brand",
+                      },
                     },
-                  },
-                  {
-                    $lookup: {
-                      from: "teams",
-                      localField: "team",
-                      foreignField: "_id",
-                      as: "team",
+                    {
+                      $lookup: {
+                        from: "teams",
+                        localField: "team",
+                        foreignField: "_id",
+                        as: "team",
+                      },
                     },
-                  },
-                  {
-                    $match: {
-                      $and: [
-                        {
-                          "domain.brand._id": brand
-                            ? mongoose.Types.ObjectId(brand)
-                            : { $ne: null },
-                        },
-                        {
-                          "domain.team._id": team
-                            ? mongoose.Types.ObjectId(team)
-                            : { $ne: null },
-                        },
-                      ],
+                    {
+                      $match: {
+                        $and: [
+                          {
+                            "domain.brand._id": brand
+                              ? mongoose.Types.ObjectId(brand)
+                              : { $ne: null },
+                          },
+                          {
+                            "domain.team._id": team
+                              ? mongoose.Types.ObjectId(team)
+                              : { $ne: null },
+                          },
+                        ],
+                      },
                     },
-                  },
-                ],
-              }
-            }
-          ],
-
+                  ],
+                },
+              },
+            ],
+          },
+          //
         },
-        //
-        
-      }
-    ]])
-    
+      ],
+    ]);
+
     return data;
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const getAllLinkManagementsByCollaboratorId = async (
   domainId = "",
@@ -185,7 +185,9 @@ const getAllLinkManagementsByCollaboratorId = async (
   colabId = "",
   pageIndex = 1,
   pageSize = 10,
-  search = ""
+  search = "",
+  dateFrom,
+  dateTo
 ) => {
   try {
     const data = await LinkManagement.aggregate([
@@ -322,8 +324,46 @@ const getAllLinkManagementsByCollaboratorId = async (
       {
         $unwind: "$domain",
       },
+      {
+        $match: {
+          ...(dateFrom !== "undefined" && dateTo !== "undefined"
+            ? {
+                $and: [
+                  {
+                    createdAt: { $gte: new Date(dateFrom) },
+                  },
+                  {
+                    createdAt: { $lte: new Date(dateTo) },
+                  },
+                ],
+              }
+            : {}),
+        },
+      },
     ]);
     const count = await LinkManagement.aggregate([
+      {
+        $match: {
+          ...(search
+            ? {
+                $or: [
+                  {
+                    title: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                  {
+                    keyword: {
+                      $regex: ".*" + search + ".*",
+                      $options: "i",
+                    },
+                  },
+                ],
+              }
+            : {}),
+        },
+      },
       {
         $addFields: {
           linkid: "$_id",
@@ -346,9 +386,7 @@ const getAllLinkManagementsByCollaboratorId = async (
                 pipeline: [
                   {
                     $match: {
-                      brand: brand
-                        ? mongoose.Types.ObjectId(brand)
-                        : { $ne: null },
+                      brand: brand ? mongoose.Types.ObjectId(brand) : "",
                     },
                   },
                   {
@@ -403,16 +441,54 @@ const getAllLinkManagementsByCollaboratorId = async (
                 : { $ne: null },
             },
             {
-              domain: domainId
-                ? mongoose.Types.ObjectId(domainId)
-                : { $ne: null },
-            },
-            {
               "collaborators._id": colabId
                 ? mongoose.Types.ObjectId(colabId)
                 : { $ne: null },
             },
           ],
+        },
+      },
+      {
+        $match: {
+          domain: domainId ? mongoose.Types.ObjectId(domainId) : { $ne: null },
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
+      },
+      {
+        $limit: Number(pageSize),
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "domain",
+          foreignField: "_id",
+          as: "domain",
+        },
+      },
+      {
+        $unwind: "$domain",
+      },
+      {
+        $match: {
+          ...(dateFrom !== "undefined" && dateTo !== "undefined"
+            ? {
+                $and: [
+                  {
+                    createdAt: { $gte: new Date(dateFrom) },
+                  },
+                  {
+                    createdAt: { $lte: new Date(dateTo) },
+                  },
+                ],
+              }
+            : {}),
         },
       },
     ]);
@@ -542,5 +618,5 @@ module.exports = {
   getById,
   getAllLinkManagementsByCollaboratorId,
   getAllLinkManagementsByDomainId,
-  getAllLinkManagementsExcelTeam
+  getAllLinkManagementsExcelTeam,
 };
