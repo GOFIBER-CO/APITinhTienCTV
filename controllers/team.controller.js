@@ -205,6 +205,19 @@ class TeamController {
                         localField: "link_management_ids",
                         foreignField: "_id",
                         as: "linkmanagements",
+                        pipeline: [
+                          {
+                            $lookup: {
+                              from: "domains",
+                              localField: "domain",
+                              foreignField: "_id",
+                              as: "domains",
+                            },
+                          },
+                          {
+                            $unwind: "$domains",
+                          },
+                        ],
                       },
                     },
                   ],

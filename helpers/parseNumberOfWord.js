@@ -16,7 +16,8 @@ function getNumberOfWord(body = {}, image = {}) {
             ?.filter((i) => i !== "\n" && i !== "" && i !== " ")?.length || 0);
       });
     });
-    number_image = Object.keys(image).length - 1;
+    number_image =
+      Object.keys(image).length - 1 >= 0 ? Object.keys(image).length - 1 : 0;
     return { number_word, number_image };
   }
 }

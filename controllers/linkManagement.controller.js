@@ -439,7 +439,6 @@ const create = async (req, res) => {
       title,
       total: (number_word * PRICE || totalPrices) + totalExtra,
     };
-    console.log(data, "sdasdasdasdsa");
 
     const linkManagement = await LinkManagementService.create(data);
 
