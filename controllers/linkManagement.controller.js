@@ -13,6 +13,7 @@ const Brand = require("../models/brand.model");
 const Team = require("../models/team.model");
 const { default: mongoose } = require("mongoose");
 const { datacatalog } = require("googleapis/build/src/apis/datacatalog");
+const parseRounding = require("../helpers/parseRouding");
 const NAME = "Link Management";
 
 const search = async (req, res) => {
@@ -437,7 +438,7 @@ const create = async (req, res) => {
       number_images: number_image,
       number_words: number_word,
       title,
-      total: (number_word * PRICE || totalPrices) + totalExtra,
+      total: parseRounding((number_word * PRICE || totalPrices) + totalExtra),
     };
 
     const linkManagement = await LinkManagementService.create(data);
@@ -449,7 +450,9 @@ const create = async (req, res) => {
       brand,
       link_management_ids,
     } = collaborator;
-    const newTotal = (number_word * PRICE || totalPrices) + totalExtra;
+    const newTotal = parseRounding(
+      (number_word * PRICE || totalPrices) + totalExtra
+    );
 
     const newCollaborator = {
       number_words: Number(oldNumberWord) + number_word,
@@ -540,10 +543,10 @@ const update = async (req, res) => {
       price_per_word,
       collaboratorId,
       total,
+      isTotal,
     } = req.body;
     // console.log(req.body, 'ádsad');
     // return ;
-
     const checkIsFound = await LinkManagement.findById(id);
     // console.log(checkIsFound, 'checkIsFound');
     // return;
@@ -621,7 +624,9 @@ const update = async (req, res) => {
         category,
         status,
         price_per_word,
-        total: checkIsFound?.number_words * price_per_word || total,
+        total: parseRounding(
+          checkIsFound?.number_words * price_per_word || total
+        ),
       },
     });
 
@@ -632,7 +637,9 @@ const update = async (req, res) => {
       brand,
       link_management_ids,
     } = collaborator;
-    const newTotal = checkIsFound?.number_words * price_per_word || total;
+    const newTotal = parseRounding(
+      checkIsFound?.number_words * price_per_word || total
+    );
 
     const newCollaborator = {
       number_words: Number(oldNumberWord) + checkIsFound?.number_words,

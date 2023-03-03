@@ -459,12 +459,6 @@ const getAllLinkManagementsByCollaboratorId = async (
         },
       },
       {
-        $skip: Number(pageIndex) * Number(pageSize) - Number(pageSize),
-      },
-      {
-        $limit: Number(pageSize),
-      },
-      {
         $lookup: {
           from: "domains",
           localField: "domain",

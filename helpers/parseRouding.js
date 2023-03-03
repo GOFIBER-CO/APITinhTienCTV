@@ -3,5 +3,4 @@ const parseRounding = (value) => {
   return a * 1000;
 };
 
-parseRounding(250);
 module.exports = parseRounding;
