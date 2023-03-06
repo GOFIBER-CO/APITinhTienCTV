@@ -26,7 +26,7 @@ const insertNewOrderPosts = (req, res) => {
 
 // lấy danh sách kết quả theo điều kiện
 const getListOrderPosts = async (req, res) => {
-  const pageSize = Number(req.query?.pageSize) || 10;
+  const pageSize = Number(req.query?.pageSize) || 5;
   const pageIndex = Number(req.query?.pageIndex) || 1;
   let response = "";
   let responsePage = "";
