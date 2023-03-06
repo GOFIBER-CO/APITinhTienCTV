@@ -17,8 +17,27 @@ const userSchema = new mongoose.Schema(
     lastName: {
       type: String,
     },
+    fullName: {
+      type: String,
+    },
+    stk: {
+      type: String,
+    },
+    bank_name: {
+      type: String,
+      require: true,
+      default: "",
+    },
     status: {
       type: Number,
+    },
+    processingPost: {
+      type: Number,
+      default: 0,
+    },
+    star: {
+      type: Number,
+      default: 5,
     },
     role: {
       type: String,
@@ -27,11 +46,10 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
     },
-    team:{
+    team: {
       type: mongoose.Types.ObjectId,
-      ref:"Team",
-      required: true
-    }
+      ref: "Team",
+    },
   },
   { timestamps: true }
 );
