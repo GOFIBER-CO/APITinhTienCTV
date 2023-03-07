@@ -19,6 +19,7 @@ const brandRouter = require("./routers/brand.router");
 const collaboratorRouter = require("./routers/collaborator.router");
 const roleRouter = require("./routers/role.router");
 const teamRouter = require("./routers/team.router");
+const orderPostsRouter = require("./routers/orderPosts.router");
 var origin_urls;
 if (process.env.NODE_ENV == "development") {
   origin_urls = [
@@ -107,6 +108,7 @@ app.use("/api", brandRouter);
 app.use("/api", collaboratorRouter);
 app.use("/api", roleRouter);
 app.use("/api", teamRouter);
+app.use("/api", orderPostsRouter);
 
 function initial() {
   Role.estimatedDocumentCount((err, count) => {
