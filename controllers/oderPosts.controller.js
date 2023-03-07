@@ -3,6 +3,7 @@ const PagedModel = require("../helpers/PagedModel");
 const OrderPostsModel = require("./../models/orderPost.model");
 const UserModel = require("./../models/user.model");
 const Role = require("./../models/role.model");
+const { default: mongoose } = require("mongoose");
 
 //thêm mới
 const insertNewOrderPosts = (req, res) => {
@@ -67,11 +68,23 @@ const getListOrderPosts = async (req, res) => {
   if (req.body.keyword) {
     objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
   }
-
+  if (req.body.ctv) {
+    objSearch.ctv = new mongoose.Types.ObjectId(req.body.ctv);
+  }
   if (req.body.status && req.body.status !== "2") {
-
     objSearch.status = req.body.status;
   }
+  if (req.body.paymentStatus && req.body.paymentStatus !== "2") {
+    let a = { 0: false, 1: true }?.[req.body.paymentStatus];
+    objSearch.paymentStatus = a;
+  }
+  if (req.body.moneyPerWord) {
+    objSearch.moneyPerWord = req.body.moneyPerWord;
+  }
+  // if (req.body.paymentStatus) {
+  //   objSearch.status = req.body.status;
+  // }
+  console.log(objSearch);
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
     if (checkUserRole) {
@@ -81,14 +94,16 @@ const getListOrderPosts = async (req, res) => {
         }
         result = await OrderPostsModel.find({ $and: [objSearch] })
           .skip((pageIndex - 1) * pageSize)
-          .limit(pageSize);
+          .limit(pageSize)
+          .sort({ createdAt: -1 });
         resultTotal = await OrderPostsModel.find({
           $and: [objSearch],
         }).countDocuments();
       } else {
         result = await OrderPostsModel.find({ $and: [objSearch] })
           .skip((pageIndex - 1) * pageSize)
-          .limit(pageSize);
+          .limit(pageSize)
+          .sort({ createdAt: -1 });
         resultTotal = await OrderPostsModel.find({
           $and: [objSearch],
         }).countDocuments();
