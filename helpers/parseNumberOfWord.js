@@ -9,11 +9,23 @@ function getNumberOfWord(body = {}, image = {}) {
     let content = body?.content;
     content?.map((value) => {
       value?.paragraph?.elements?.map((item) => {
+        // number_word =
+        //   number_word +
+        //   (item?.textRun?.content
+        //     ?.split(" ")
+        //     ?.filter((i) => i !== "\n" && i !== "" && i !== " ")?.length || 0);
+        let words =
+          item.textRun && item.textRun.content
+            ? item.textRun.content
+                .replace(/(\s+|-|\n)+/g, " ")
+                .trim()
+                .split(/[\s/-]/)
+            : [];
+        console.log(words, "asdasd");
         number_word =
           number_word +
-          (item?.textRun?.content
-            ?.split(" ")
-            ?.filter((i) => i !== "\n" && i !== "" && i !== " ")?.length || 0);
+          words.filter((item) => !["", ",", ".", "-"].includes(item.trim()))
+            .length;
       });
     });
     number_image =
