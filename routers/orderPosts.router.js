@@ -13,6 +13,11 @@ router.post(
   authorize(),
   orderPostController.getListOrderPosts
 );
+router.put(
+  "/order-post/received-post/:id",
+  authorize(),
+  orderPostController.receivedPost
+);
 router.delete(
   "/order-post/delete/:id",
   authorize(),
