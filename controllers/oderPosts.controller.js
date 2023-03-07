@@ -34,7 +34,6 @@ const getListOrderPosts = async (req, res) => {
   let result = [];
   let resultTotal = 0;
   const userId = req?.user?.id;
-  console.log(req.body);
   const objSearch = {};
   if (req.body.title) {
     objSearch.title = { $regex: ".*" + req.body.title + ".*" };
@@ -68,7 +67,9 @@ const getListOrderPosts = async (req, res) => {
   if (req.body.keyword) {
     objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
   }
-  if (req.body.status) {
+
+  if (req.body.status && req.body.status !== "2") {
+
     objSearch.status = req.body.status;
   }
   try {
@@ -85,7 +86,9 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       } else {
-        result = await OrderPostsModel.find({ $and: [objSearch] });
+        result = await OrderPostsModel.find({ $and: [objSearch] })
+          .skip((pageIndex - 1) * pageSize)
+          .limit(pageSize);
         resultTotal = await OrderPostsModel.find({
           $and: [objSearch],
         }).countDocuments();
@@ -114,9 +117,7 @@ const updateRecord = async (req, res) => {
   // req.body.user = req?.user?.id;
   const { id } = req?.body;
   // const { title, desc, moneyPerWord, keyword } = req.body;
-  console.log("id: ", id, req.body);
   let response = "";
-
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
     if (checkRecordExist) {
