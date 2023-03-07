@@ -185,27 +185,132 @@ class TeamController {
             id: id !== "undefined" ? id : { $ne: null },
           },
         },
+        // {
+        //   $lookup: {
+        //     from: "domains",
+        //     localField: "_id",
+        //     foreignField: "team",
+        //     as: "domains",
+        //     let:{
+        //       "domains_id":"$_id"
+        //     },
+        //     pipeline: [
+        //       {
+        //         $set:{
+        //         "domains_id":"$$domains_id"
+        //         }
+        //       },
+        //       {
+        //         $lookup: {
+        //           from: "collaborators",
+        //           localField: "_id",
+        //           foreignField: "domain_id",
+        //           as: "collaborators",
+        //           let:{
+        //             "domains_id":"$domains_id"
+        //           },
+        //           pipeline: [
+        //             {
+        //               $set:{
+        //                 "domains_id":"$$domains_id"
+        //               }
+        //             },
+        //             {
+        //               $lookup: {
+        //                 from: "linkmanagements",
+        //                 localField: "link_management_ids",
+        //                 foreignField: "_id",
+        //                 as: "linkmanagements",
+        //                 let:{
+        //                   "domains_id":"$domains_id"
+        //                 },
+        //                 pipeline: [
+        //                   {
+        //                     $match:{
+        //                       $expr:{                              
+        //                           $eq:
+        //                           ["$domain","$$domains_id"]      
+        //                       }                       
+        //                     }
+        //                   },                      
+        //                   {
+        //                     $lookup: {
+        //                       from: "domains",
+        //                       localField: "domain",
+        //                       foreignField: "_id",
+        //                       as: "domains",
+        //                     },
+        //                   },
+        //                   {
+        //                     $unwind: "$domains",
+        //                   },
+        //                 ],
+        //               },
+        //             },
+                    
+        //           ],
+        //         },
+        //       },
+        //       {
+        //         $lookup: {
+        //           from: "brands",
+        //           localField: "brand",
+        //           foreignField: "_id",
+        //           as: "brand",
+        //         },
+        //       },
+        //       {
+        //         $unwind: "$brand",
+        //       },
+        //     ],
+        //   },
+        // },
         {
-          $lookup: {
+          $lookup:        
+          {
             from: "domains",
             localField: "_id",
             foreignField: "team",
             as: "domains",
-            pipeline: [
+            pipeline:[
+              {
+                $set:{
+                  "domains_id":"$_id"
+                }  
+              },
               {
                 $lookup: {
                   from: "collaborators",
                   localField: "_id",
                   foreignField: "domain_id",
                   as: "collaborators",
-                  pipeline: [
+                  let:{
+                    "domains_id":"$domains_id"
+                  },
+                  pipeline:[
+                    {
+                      $set:{
+                      "domains_id":"$$domains_id"
+                      }
+                    },
                     {
                       $lookup: {
                         from: "linkmanagements",
                         localField: "link_management_ids",
                         foreignField: "_id",
                         as: "linkmanagements",
-                        pipeline: [
+                        let:{
+                          "domains_id":"$domains_id"
+                        },
+                        pipeline:[
+                          {
+                            $match:{
+                              $expr:{
+                                  $eq:
+                                  ["$domain","$$domains_id"]
+                              }
+                            }
+                          },
                           {
                             $lookup: {
                               from: "domains",
@@ -217,11 +322,12 @@ class TeamController {
                           {
                             $unwind: "$domains",
                           },
-                        ],
+                        ]
                       },
                     },
-                  ],
-                },
+                 
+                 ]
+                }
               },
               {
                 $lookup: {
@@ -234,9 +340,10 @@ class TeamController {
               {
                 $unwind: "$brand",
               },
-            ],
-          },
-        },
+            ]
+          }
+        }
+
       ]);
       return res.status(200).json({ success: true, data });
     } catch (error) {
