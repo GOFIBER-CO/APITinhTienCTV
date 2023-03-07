@@ -80,14 +80,16 @@ const getListOrderPosts = async (req, res) => {
         }
         result = await OrderPostsModel.find({ $and: [objSearch] })
           .skip((pageIndex - 1) * pageSize)
-          .limit(pageSize);
+          .limit(pageSize)
+          .sort({ createdAt: -1 });
         resultTotal = await OrderPostsModel.find({
           $and: [objSearch],
         }).countDocuments();
       } else {
         result = await OrderPostsModel.find({ $and: [objSearch] })
           .skip((pageIndex - 1) * pageSize)
-          .limit(pageSize);
+          .limit(pageSize)
+          .sort({ createdAt: -1 });
         resultTotal = await OrderPostsModel.find({
           $and: [objSearch],
         }).countDocuments();
