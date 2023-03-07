@@ -8,6 +8,7 @@ const Role = require("./../models/role.model");
 const insertNewOrderPosts = (req, res) => {
   let response = "";
   try {
+    req.body.user = req?.user?.id;
     const resData = new OrderPostsModel(req.body);
     resData.save((err, data) => {
       if (err) {
@@ -75,15 +76,23 @@ const getListOrderPosts = async (req, res) => {
 
 //Cập nhập kết quả hiện có
 const updateRecord = async (req, res) => {
-  const { id } = req.params;
+  // req.body.user = req?.user?.id;
+  const { id } = req?.body;
+  // const { title, desc, moneyPerWord, keyword } = req.body;
+  console.log("id: ", id, req.body);
   let response = "";
 
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
     if (checkRecordExist) {
-      const result = await OrderPostsModel.findOneAndUpdate(id, req.body, {
-        new: true,
-      });
+      const result = await OrderPostsModel.findByIdAndUpdate(
+        id,
+        // { title, desc, moneyPerWord, keyword },
+        req.body,
+        {
+          new: true,
+        }
+      );
       response = new ResponseModel(200, "Cập nhập thành công.", result);
       res.status(200).json(response);
     } else {
