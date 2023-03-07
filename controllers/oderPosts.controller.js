@@ -28,15 +28,12 @@ const insertNewOrderPosts = (req, res) => {
 // lấy danh sách kết quả theo điều kiện
 const getListOrderPosts = async (req, res) => {
   const pageSize = parseInt(req.query?.pageSize) || 5;
-  console.log("pageSize: ", pageSize);
   const pageIndex = parseInt(req.query?.pageIndex) || 1;
-  console.log("pageIndex: ", pageIndex);
   let response = "";
   let responsePage = "";
   let result = [];
   let resultTotal = 0;
   const userId = req?.user?.id;
-  console.log(req.body);
   const objSearch = {};
   if (req.body.title) {
     objSearch.title = { $regex: ".*" + req.body.title + ".*" };
@@ -119,7 +116,6 @@ const updateRecord = async (req, res) => {
   // req.body.user = req?.user?.id;
   const { id } = req?.body;
   // const { title, desc, moneyPerWord, keyword } = req.body;
-  // console.log("id: ", id, req.body);
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
