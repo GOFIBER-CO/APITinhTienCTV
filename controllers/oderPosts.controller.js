@@ -33,27 +33,63 @@ const getListOrderPosts = async (req, res) => {
   let responsePage = "";
   let result = [];
   let resultTotal = 0;
-  const userId = req?.query?.userId;
-  console.log("userId: ", userId);
+  const userId = req?.user?.id;
+  console.log(req.body);
   const objSearch = {};
+  if (req.body.title) {
+    objSearch.title = { $regex: ".*" + req.body.title + ".*" };
+  }
+  if (req.body.createdAt && req.body.createdAt.length === 2) {
+    const dateFrom = new Date(req.body.createdAt[0]);
+    const startDate = new Date(
+      dateFrom.getFullYear(),
+      dateFrom.getMonth(),
+      dateFrom.getDate(),
+      0,
+      0,
+      0
+    );
+    const dateTo = new Date(req.body.createdAt[1]);
+    const endDate = new Date(
+      dateTo.getFullYear(),
+      dateTo.getMonth(),
+      dateTo.getDate(),
+      23,
+      59,
+      59
+    );
+    objSearch["createdAt"] = { $gte: startDate, $lte: endDate };
+  }
 
+  if (req.body.moneyPerWord) {
+    objSearch.moneyPerWord = { $gte: req.body.moneyPerWord };
+  }
+
+  if (req.body.keyword) {
+    objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
+  }
   if (req.query.status) {
-    objSearch["status"] = req.query.status;
+    objSearch.status = req.query.status;
   }
 
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
-    console.log("checkUserRole: ", checkUserRole);
     if (checkUserRole) {
       if (checkUserRole?.role === "Member") {
-        objSearch["user"] = userId;
-        result = await OrderPostsModel.find(objSearch)
+        if (userId) {
+          objSearch["user"] = userId;
+        }
+        result = await OrderPostsModel.find({ $and: [objSearch] })
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize);
-        resultTotal = await OrderPostsModel.find(objSearch).countDocuments();
+        resultTotal = await OrderPostsModel.find({
+          $and: [objSearch],
+        }).countDocuments();
       } else {
-        result = await OrderPostsModel.find(objSearch);
-        resultTotal = await OrderPostsModel.find(objSearch).countDocuments();
+        result = await OrderPostsModel.find({ $and: [objSearch] });
+        resultTotal = await OrderPostsModel.find({
+          $and: [objSearch],
+        }).countDocuments();
       }
 
       responsePage = new PagedModel(
