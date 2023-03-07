@@ -28,7 +28,9 @@ const insertNewOrderPosts = (req, res) => {
 // lấy danh sách kết quả theo điều kiện
 const getListOrderPosts = async (req, res) => {
   const pageSize = parseInt(req.query?.pageSize) || 5;
+  console.log("pageSize: ", pageSize);
   const pageIndex = parseInt(req.query?.pageIndex) || 1;
+  console.log("pageIndex: ", pageIndex);
   let response = "";
   let responsePage = "";
   let result = [];
@@ -68,8 +70,8 @@ const getListOrderPosts = async (req, res) => {
   if (req.body.keyword) {
     objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
   }
-  if (req.query.status) {
-    objSearch.status = req.query.status;
+  if (req.body.status && req.body.status !== "2") {
+    objSearch.status = req.body.status;
   }
 
   try {
@@ -86,7 +88,9 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       } else {
-        result = await OrderPostsModel.find({ $and: [objSearch] });
+        result = await OrderPostsModel.find({ $and: [objSearch] })
+          .skip((pageIndex - 1) * pageSize)
+          .limit(pageSize);
         resultTotal = await OrderPostsModel.find({
           $and: [objSearch],
         }).countDocuments();
@@ -115,9 +119,8 @@ const updateRecord = async (req, res) => {
   // req.body.user = req?.user?.id;
   const { id } = req?.body;
   // const { title, desc, moneyPerWord, keyword } = req.body;
-  console.log("id: ", id, req.body);
+  // console.log("id: ", id, req.body);
   let response = "";
-
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
     if (checkRecordExist) {
