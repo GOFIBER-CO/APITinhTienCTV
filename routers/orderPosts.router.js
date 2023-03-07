@@ -8,7 +8,7 @@ router.post(
   authorize(),
   orderPostController.insertNewOrderPosts
 );
-router.get(
+router.post(
   "/order-post/list",
   authorize(),
   orderPostController.getListOrderPosts
