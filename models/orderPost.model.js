@@ -10,7 +10,7 @@ const orderPostsSchema = new Schema(
     ctv: { type: ObjectId, ref: "User", default: null },
     star: Number,
     moneyPerWord: {
-      type: String,
+      type: Number,
       default: 60000,
     },
     paymentStatus: {

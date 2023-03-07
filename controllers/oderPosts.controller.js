@@ -8,6 +8,7 @@ const Role = require("./../models/role.model");
 const insertNewOrderPosts = (req, res) => {
   let response = "";
   try {
+    req.body.user = req?.user?.id;
     const resData = new OrderPostsModel(req.body);
     resData.save((err, data) => {
       if (err) {
@@ -32,27 +33,64 @@ const getListOrderPosts = async (req, res) => {
   let responsePage = "";
   let result = [];
   let resultTotal = 0;
-  const userId = req?.query?.userId;
-  console.log("userId: ", userId);
+  const userId = req?.user?.id;
   const objSearch = {};
+  if (req.body.title) {
+    objSearch.title = { $regex: ".*" + req.body.title + ".*" };
+  }
+  if (req.body.createdAt && req.body.createdAt.length === 2) {
+    const dateFrom = new Date(req.body.createdAt[0]);
+    const startDate = new Date(
+      dateFrom.getFullYear(),
+      dateFrom.getMonth(),
+      dateFrom.getDate(),
+      0,
+      0,
+      0
+    );
+    const dateTo = new Date(req.body.createdAt[1]);
+    const endDate = new Date(
+      dateTo.getFullYear(),
+      dateTo.getMonth(),
+      dateTo.getDate(),
+      23,
+      59,
+      59
+    );
+    objSearch["createdAt"] = { $gte: startDate, $lte: endDate };
+  }
 
-  if (req.query.status) {
-    objSearch["status"] = req.query.status;
+  if (req.body.moneyPerWord) {
+    objSearch.moneyPerWord = { $gte: req.body.moneyPerWord };
+  }
+
+  if (req.body.keyword) {
+    objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
+  }
+  if (req.body.status && req.body.status !== "2") {
+    objSearch.status = req.body.status;
   }
 
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
-    console.log("checkUserRole: ", checkUserRole);
     if (checkUserRole) {
       if (checkUserRole?.role === "Member") {
-        objSearch["user"] = userId;
-        result = await OrderPostsModel.find(objSearch)
+        if (userId) {
+          objSearch["user"] = userId;
+        }
+        result = await OrderPostsModel.find({ $and: [objSearch] })
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize);
-        resultTotal = await OrderPostsModel.find(objSearch).countDocuments();
+        resultTotal = await OrderPostsModel.find({
+          $and: [objSearch],
+        }).countDocuments();
       } else {
-        result = await OrderPostsModel.find(objSearch);
-        resultTotal = await OrderPostsModel.find(objSearch).countDocuments();
+        result = await OrderPostsModel.find({ $and: [objSearch] })
+          .skip((pageIndex - 1) * pageSize)
+          .limit(pageSize);
+        resultTotal = await OrderPostsModel.find({
+          $and: [objSearch],
+        }).countDocuments();
       }
 
       responsePage = new PagedModel(
@@ -75,15 +113,21 @@ const getListOrderPosts = async (req, res) => {
 
 //Cập nhập kết quả hiện có
 const updateRecord = async (req, res) => {
-  const { id } = req.params;
+  // req.body.user = req?.user?.id;
+  const { id } = req?.body;
+  // const { title, desc, moneyPerWord, keyword } = req.body;
   let response = "";
-
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
     if (checkRecordExist) {
-      const result = await OrderPostsModel.findOneAndUpdate(id, req.body, {
-        new: true,
-      });
+      const result = await OrderPostsModel.findByIdAndUpdate(
+        id,
+        // { title, desc, moneyPerWord, keyword },
+        req.body,
+        {
+          new: true,
+        }
+      );
       response = new ResponseModel(200, "Cập nhập thành công.", result);
       res.status(200).json(response);
     } else {

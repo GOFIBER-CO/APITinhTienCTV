@@ -43,12 +43,18 @@ async function createUser({
   role,
   status,
   team,
+  bank_name,
+  stk,
+  fullName,
 }) {
   const userQuery = await User.findOne({ username });
   const roleQuery = await Role.findOne({ name: role });
   if (!userQuery && roleQuery) {
     let user = new User({
       firstName: firstName,
+      bank_name,
+      stk,
+      fullName,
       lastName: lastName,
       username: username,
       passwordHash: bcrypt.hashSync(passwordHash, 10),

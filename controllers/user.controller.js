@@ -7,9 +7,20 @@ const User = require("../models/user.model");
 const PagedModel = require("../models/PagedModel");
 
 async function signup(req, res) {
-  
-  const { username, passwordHash, firstName, lastName, role, status, team } = req.body;
-  const checkUser = await userModel.find({username: username})
+  const {
+    username,
+    passwordHash,
+    stk,
+    bank_name,
+    fullName,
+    firstName,
+    lastName,
+    role,
+    status,
+    team,
+  } = req.body;
+
+  const checkUser = await userModel.find({ username: username });
   if (checkUser.length > 0) {
     return res.status(400).json({ message: "User already exists" });
   }
@@ -18,12 +29,19 @@ async function signup(req, res) {
     passwordHash,
     firstName,
     lastName,
-    role,
-    status,
-    team
+    role: role || "CTV",
+    status: status || 1,
+    team,
+    stk,
+    bank_name,
+    fullName,
   });
-  return res.json(user);
+  return res.json({
+    message: "success",
+    user,
+  });
 }
+
 async function editUser(req, res) {
   const id = req.params?.id;
   const { username, firstName, lastName, role, status, team } = req.body;
