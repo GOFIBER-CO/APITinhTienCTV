@@ -88,7 +88,7 @@ const getListOrderPosts = async (req, res) => {
   // if (req.body.paymentStatus) {
   //   objSearch.status = req.body.status;
   // }
-  // console.log(objSearch);
+  console.log(objSearch);
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
     if (checkUserRole) {
