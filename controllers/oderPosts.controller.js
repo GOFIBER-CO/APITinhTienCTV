@@ -28,7 +28,7 @@ const insertNewOrderPosts = (req, res) => {
 
 // lấy danh sách kết quả theo điều kiện
 const getListOrderPosts = async (req, res) => {
-  // console.log("reqfsdf: ", req.body);
+  console.log("reqfsdf: ", req.body);
   const pageSize = parseInt(req.query?.pageSize) || 5;
   const pageIndex = parseInt(req.query?.pageIndex) || 1;
   let response = "";
@@ -113,7 +113,11 @@ const getListOrderPosts = async (req, res) => {
         }).countDocuments();
       } else {
         objSearch.status = 1;
-        result = await OrderPostsModel.find({ $and: [objSearch] })
+        console.log("objSearch: ", objSearch);
+
+        objSearch._id = result = await OrderPostsModel.find({
+          $and: [objSearch],
+        })
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize)
           .sort({ createdAt: -1 });
