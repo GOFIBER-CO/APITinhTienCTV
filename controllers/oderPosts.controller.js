@@ -37,6 +37,7 @@ const getListOrderPosts = async (req, res) => {
   let resultTotal = 0;
   const userId = req?.user?.id;
   const objSearch = {};
+
   if (req.body.title) {
     objSearch.title = { $regex: ".*" + req.body.title + ".*" };
   }
@@ -70,7 +71,7 @@ const getListOrderPosts = async (req, res) => {
     objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
   }
   if (req.body.status && req.body.status !== "2") {
-    objSearch.status = req.body.status;
+    objSearch.status = req.body?.status;
   }
   if (req.body.ctv) {
     objSearch.ctv = new mongoose.Types.ObjectId(req.body.ctv);
@@ -83,12 +84,8 @@ const getListOrderPosts = async (req, res) => {
     objSearch.paymentStatus = a;
   }
   if (req.body.moneyPerWord) {
-    objSearch.moneyPerWord = req.body.moneyPerWord;
+    objSearch.moneyPerWord = { $gte: parseInt(req.body.moneyPerWord) };
   }
-  // if (req.body.paymentStatus) {
-  //   objSearch.status = req.body.status;
-  // }
-  console.log(objSearch);
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
     if (checkUserRole) {
