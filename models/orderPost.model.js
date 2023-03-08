@@ -21,6 +21,9 @@ const orderPostsSchema = new Schema(
       type: String,
       default: null,
     },
+    minWord: {
+      type: Number,
+    },
     note: {
       type: String,
       default: null,
