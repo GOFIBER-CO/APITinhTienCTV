@@ -169,7 +169,7 @@ const receivedPost = async (req, res) => {
   try {
     const userInfo = await UserModel.findOne({ _id: user, role: "CTV" });
     if (userInfo) {
-      if (userInfo.star === userInfo.processingPost) {
+      if (userInfo.star <= userInfo.processingPost) {
         response = new ResponseModel(
           202,
           "Hiện tại số bài viết của bạn đã đạt giới hạn. Vui lòng hoàn thành để có thể nhận thêm",
@@ -246,6 +246,88 @@ const receivedPost = async (req, res) => {
   }
 };
 
+const refundPost = async (req, res) => {
+  let response = null;
+  try {
+    const id = req.params.id;
+    const user = req.user.id;
+    const postOrder = await OrderPostsModel.findOne({ _id: id, ctv: user });
+    if (!postOrder) {
+      response = new ResponseModel(400, "Post not found", "Post not found");
+      return res.status(400).json(response);
+    } else {
+      if (postOrder.statusOrderPost !== 0) {
+        response = new ResponseModel(
+          400,
+          "Post can't refund",
+          "Post can't refund"
+        );
+        return res.status(400).json(response);
+      } else {
+        OrderPostsModel.findByIdAndUpdate(
+          id,
+          {
+            ctv: null,
+            statusOrderPost: -1,
+          },
+          {},
+          async (err, result) => {
+            if (err) {
+              response = new ResponseModel(
+                400,
+                "Post can't refund",
+                "Post can't refund"
+              );
+              return res.status(400).json(response);
+            } else {
+              const userInfo = await UserModel.findOne({
+                _id: user,
+                role: "CTV",
+              });
+              if (!userInfo) {
+                response = new ResponseModel(
+                  400,
+                  "User not found",
+                  "User not found"
+                );
+                return res.status(400).json(response);
+              } else {
+                UserModel.findByIdAndUpdate(
+                  userInfo?._id,
+                  {
+                    star: parseInt(userInfo?.star) - 1,
+                    processingPost: parseInt(userInfo?.processingPost) - 1,
+                  },
+                  {},
+                  (errorUser, userUpdate) => {
+                    if (errorUser) {
+                      response = new ResponseModel(
+                        400,
+                        "User not found",
+                        "User not found"
+                      );
+                      return res.status(400).json(response);
+                    } else {
+                      response = new ResponseModel(
+                        200,
+                        "Refund Post Success",
+                        "Refund Post Success"
+                      );
+                      return res.status(200).json(response);
+                    }
+                  }
+                );
+              }
+            }
+          }
+        );
+      }
+    }
+  } catch (error) {
+    response = new ResponseModel(500, error.message, error);
+    return res.status(500).json(response);
+  }
+};
 // Xóa kết quả hiện có
 const deleteRecord = async (req, res) => {
   const { id } = req.params;
@@ -281,4 +363,5 @@ module.exports = {
   deleteRecord,
   updateRecord,
   receivedPost,
+  refundPost,
 };
