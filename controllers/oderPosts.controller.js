@@ -28,7 +28,7 @@ const insertNewOrderPosts = (req, res) => {
 
 // lấy danh sách kết quả theo điều kiện
 const getListOrderPosts = async (req, res) => {
-  // console.log("reqfsdf: ", req.body);
+  console.log("reqfsdf: ", req.body);
   const pageSize = parseInt(req.query?.pageSize) || 5;
   const pageIndex = parseInt(req.query?.pageIndex) || 1;
   let response = "";
@@ -88,7 +88,7 @@ const getListOrderPosts = async (req, res) => {
   // if (req.body.paymentStatus) {
   //   objSearch.status = req.body.status;
   // }
-  // console.log(objSearch);
+  console.log(objSearch);
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
     if (checkUserRole) {
