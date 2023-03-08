@@ -28,9 +28,14 @@ const orderPostsSchema = new Schema(
       type: String,
       default: null,
     },
+    statusOrderPost: {
+      type: Number,
+      default: -1,
+    },
+    expired: Date,
     status: {
       type: Number,
-      default: -1, //-1: chưa ai nhận || 0: đã có ctv nhận || 1: đã xong
+      default: 1, //-1: chưa ai nhận || 0: đã có ctv nhận || 1: đã xong
     },
   },
   { timestamps: true }

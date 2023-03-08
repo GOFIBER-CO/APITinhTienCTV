@@ -28,6 +28,7 @@ const insertNewOrderPosts = (req, res) => {
 
 // lấy danh sách kết quả theo điều kiện
 const getListOrderPosts = async (req, res) => {
+  // console.log("reqfsdf: ", req.body);
   const pageSize = parseInt(req.query?.pageSize) || 5;
   const pageIndex = parseInt(req.query?.pageIndex) || 1;
   let response = "";
@@ -68,11 +69,14 @@ const getListOrderPosts = async (req, res) => {
   if (req.body.keyword) {
     objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
   }
+  if (req.body.status && req.body.status !== "2") {
+    objSearch.status = req.body.status;
+  }
   if (req.body.ctv) {
     objSearch.ctv = new mongoose.Types.ObjectId(req.body.ctv);
   }
-  if (req.body.status && req.body.status !== "2") {
-    objSearch.status = req.body.status;
+  if (req.body.statusOrderPost && req.body.statusOrderPost !== "2") {
+    objSearch.statusOrderPost = req.body.statusOrderPost;
   }
   if (req.body.paymentStatus && req.body.paymentStatus !== "2") {
     let a = { 0: false, 1: true }?.[req.body.paymentStatus];
@@ -84,7 +88,7 @@ const getListOrderPosts = async (req, res) => {
   // if (req.body.paymentStatus) {
   //   objSearch.status = req.body.status;
   // }
-  console.log(objSearch);
+  // console.log(objSearch);
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
     if (checkUserRole) {
@@ -99,7 +103,16 @@ const getListOrderPosts = async (req, res) => {
         resultTotal = await OrderPostsModel.find({
           $and: [objSearch],
         }).countDocuments();
+      } else if (checkUserRole?.role === "Admin") {
+        result = await OrderPostsModel.find({ $and: [objSearch] })
+          .skip((pageIndex - 1) * pageSize)
+          .limit(pageSize)
+          .sort({ createdAt: -1 });
+        resultTotal = await OrderPostsModel.find({
+          $and: [objSearch],
+        }).countDocuments();
       } else {
+        objSearch.status = 1;
         result = await OrderPostsModel.find({ $and: [objSearch] })
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize)
@@ -130,20 +143,14 @@ const getListOrderPosts = async (req, res) => {
 //Cập nhập kết quả hiện có
 const updateRecord = async (req, res) => {
   // req.body.user = req?.user?.id;
-  const { id } = req?.body;
-  // const { title, desc, moneyPerWord, keyword } = req.body;
+  const id = req?.body?._id || req?.body?.id;
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
     if (checkRecordExist) {
-      const result = await OrderPostsModel.findByIdAndUpdate(
-        id,
-        // { title, desc, moneyPerWord, keyword },
-        req.body,
-        {
-          new: true,
-        }
-      );
+      const result = await OrderPostsModel.findByIdAndUpdate(id, req.body, {
+        new: true,
+      });
       response = new ResponseModel(200, "Cập nhập thành công.", result);
       res.status(200).json(response);
     } else {
@@ -184,7 +191,7 @@ const receivedPost = async (req, res) => {
               req.params.id,
               {
                 ctv: user,
-                status: 0,
+                statusOrderPost: 0,
               },
               {},
               (err, result) => {
@@ -246,15 +253,20 @@ const deleteRecord = async (req, res) => {
 
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
-
+    console.log("checkRecordExist: ", checkRecordExist);
     if (checkRecordExist) {
-      const result = await OrderPostsModel.findByIdAndDelete(id);
-      if (Object.keys(result).length > 0) {
-        response = new ResponseModel(200, "Xóa thành công.", result);
+      if (!checkRecordExist?.ctv) {
+        const result = await OrderPostsModel.findByIdAndDelete(id);
+        if (Object.keys(result).length > 0) {
+          response = new ResponseModel(200, "Xóa thành công.", result);
+          res.status(200).json(response);
+        }
+      } else {
+        response = new ResponseModel(200, "Bài viết đã có người nhận.", result);
         res.status(200).json(response);
       }
     } else {
-      response = new ResponseModel(404, "Không tìm thấy bài viết.", null);
+      response = new ResponseModel(200, "Không tìm thấy bài viết.", null);
       res.status(404).json(response);
     }
   } catch (error) {
