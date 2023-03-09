@@ -20,6 +20,8 @@ const collaboratorRouter = require("./routers/collaborator.router");
 const roleRouter = require("./routers/role.router");
 const teamRouter = require("./routers/team.router");
 const orderPostsRouter = require("./routers/orderPosts.router");
+const countWordInGoogleDocsRouter = require("./routers/countWordInGoogleDocs.router");
+
 var origin_urls;
 if (process.env.NODE_ENV == "development") {
   origin_urls = [
@@ -52,6 +54,8 @@ const app = express();
 //models
 const Role = require("./models/role.model");
 const User = require("./models/user.model");
+// const checkExpiredOfOrderPostWhenCtvReceived = require("./controllers/schedule");
+const scheduleController = require("./controllers/schedule");
 //cors
 app.use(cors(corsOptions));
 app.use(fileUpload());
@@ -110,6 +114,7 @@ app.use("/api", collaboratorRouter);
 app.use("/api", roleRouter);
 app.use("/api", teamRouter);
 app.use("/api", orderPostsRouter);
+app.use("/api", countWordInGoogleDocsRouter);
 
 function initial() {
   Role.estimatedDocumentCount((err, count) => {
@@ -189,9 +194,18 @@ function initial() {
 }
 initial;
 cron.schedule(
-  "* * * * *",
+  // "* * * * *", //1 phút chạy 1 lần
+  // "*/10 * * * * *", //10 giây chạy 1 lần
+  "0 0 * * *", // 0h ngày mai chạy 1 lần
+
   () => {
-    console.log("Running a job at 01:00 at America/Sao_Paulo timezone");
+    console.log(
+      "Running a job at 01:00 at America/Sao_Paulo timezone " + Date.now()
+    );
+    Promise.all([
+      scheduleController.checkExpiredOfOrderPostWhenCtvReceived(),
+      scheduleController.checkExpiredOfOrderPostWhenHaveNotCtvReceived(),
+    ]);
   },
   {
     scheduled: true,

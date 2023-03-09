@@ -33,6 +33,10 @@ const orderPostsSchema = new Schema(
       default: -1,
     },
     expired: Date,
+    isExpired: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: Number,
       default: 1, //-1: chưa ai nhận || 0: đã có ctv nhận || 1: đã xong

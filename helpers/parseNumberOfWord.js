@@ -34,6 +34,4 @@ function getNumberOfWord(body = {}, image = {}) {
   }
 }
 
-getNumberOfWord();
-
 module.exports = getNumberOfWord;
