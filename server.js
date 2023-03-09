@@ -9,7 +9,7 @@ require("dotenv").config();
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const fileUpload = require("express-fileupload");
-
+const cron = require("node-cron");
 const userRoutes = require("./routers/user.router");
 const ROLE = require("./helpers/role");
 const domainRoutes = require("./routers/domain.router");
@@ -70,6 +70,7 @@ app.use(express.urlencoded({ extended: true }));
 mongoose.set("strictQuery", false);
 mongoose.connect(process.env.DATABASE_CLOUD, function (err) {
   if (err) {
+    console.log(err);
     console.log("Mongodb connected error");
   } else {
     console.log("Mongodb connected successfuly");
@@ -187,3 +188,13 @@ function initial() {
   });
 }
 initial;
+cron.schedule(
+  "* * * * *",
+  () => {
+    console.log("Running a job at 01:00 at America/Sao_Paulo timezone");
+  },
+  {
+    scheduled: true,
+    timezone: "Asia/Ho_Chi_Minh",
+  }
+);
