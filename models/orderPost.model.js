@@ -30,7 +30,7 @@ const orderPostsSchema = new Schema(
     },
     statusOrderPost: {
       type: Number,
-      default: -1,
+      default: -1, //-1: chưa ai nhận || 0: đã có ctv nhận || 1: đã xong
     },
     expired: Date,
     isExpired: {
@@ -39,7 +39,15 @@ const orderPostsSchema = new Schema(
     },
     status: {
       type: Number,
-      default: 1, //-1: chưa ai nhận || 0: đã có ctv nhận || 1: đã xong
+      default: 1,
+    },
+    currentWord: {
+      type: Number,
+      default: 0,
+    },
+    isWithdrawn: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

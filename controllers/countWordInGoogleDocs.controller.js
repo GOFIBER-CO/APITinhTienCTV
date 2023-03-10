@@ -20,10 +20,17 @@ const countWord = async (req, res) => {
       body,
       inlineObjects
     );
+
     if (number_word >= minWord) {
       const rs = await OrderPostsModel.findByIdAndUpdate(
         _id,
-        { $set: { link: link_post, statusOrderPost: 1 } },
+        {
+          $set: {
+            link: link_post,
+            statusOrderPost: 1,
+            currentWord:Number(number_word),
+          },
+        },
         { new: true }
       );
       // console.log("rs: ", rs);

@@ -28,7 +28,6 @@ const insertNewOrderPosts = (req, res) => {
 
 // lấy danh sách kết quả theo điều kiện
 const getListOrderPosts = async (req, res) => {
-  console.log("reqfsdf: ", req.body);
   const pageSize = parseInt(req.query?.pageSize) || 5;
   const pageIndex = parseInt(req.query?.pageIndex) || 1;
   let response = "";
@@ -94,6 +93,7 @@ const getListOrderPosts = async (req, res) => {
           objSearch["user"] = userId;
         }
         result = await OrderPostsModel.find({ $and: [objSearch] })
+          .populate("ctv")
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize)
           .sort({ createdAt: -1 });
@@ -102,6 +102,7 @@ const getListOrderPosts = async (req, res) => {
         }).countDocuments();
       } else if (checkUserRole?.role === "Admin") {
         result = await OrderPostsModel.find({ $and: [objSearch] })
+          .populate("ctv")
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize)
           .sort({ createdAt: -1 });
@@ -110,11 +111,12 @@ const getListOrderPosts = async (req, res) => {
         }).countDocuments();
       } else {
         objSearch.status = 1;
-        console.log("objSearch: ", objSearch);
+        objSearch.isExpired = false;
 
         objSearch._id = result = await OrderPostsModel.find({
           $and: [objSearch],
         })
+          .populate("ctv")
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize)
           .sort({ createdAt: -1 });
@@ -122,7 +124,6 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       }
-
       responsePage = new PagedModel(
         pageIndex,
         pageSize,
@@ -143,8 +144,23 @@ const getListOrderPosts = async (req, res) => {
 
 //Cập nhập kết quả hiện có
 const updateRecord = async (req, res) => {
+  console.log(`fakjhsdf`, req.body);
+  const { expired } = req.body;
+  const date = new Date(expired);
+  const timestamp = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+    date.getUTCMilliseconds()
+  );
+  const currentDate = Date.now();
+  if (timestamp > currentDate) req.body.isExpired = false;
   // req.body.user = req?.user?.id;
   const id = req?.body?._id || req?.body?.id;
+
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
@@ -163,7 +179,34 @@ const updateRecord = async (req, res) => {
     res.status(500).json(response);
   }
 };
-
+//Cập nhập trạng thái
+const updateStatusBanking = async (req, res) => {
+  // console.log(`fakjhsdf`, req.body);
+  const id = req?.body?._id || req?.body?.id;
+  let response = "";
+  try {
+    const checkRecordExist = await OrderPostsModel.findById(id);
+    if (checkRecordExist) {
+      const result = await OrderPostsModel.findByIdAndUpdate(
+        id,
+        {
+          $set: { paymentStatus: true },
+        },
+        {
+          new: true,
+        }
+      );
+      response = new ResponseModel(200, "Cập nhập thành công.", result);
+      res.status(200).json(response);
+    } else {
+      response = new ResponseModel(404, "Không tìm thấy bài viết.", null);
+      res.status(404).json(response);
+    }
+  } catch (error) {
+    response = new ResponseModel(500, error.message, error);
+    res.status(500).json(response);
+  }
+};
 const receivedPost = async (req, res) => {
   let response = {};
   const user = req?.user?.id;
@@ -336,7 +379,6 @@ const deleteRecord = async (req, res) => {
 
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
-    console.log("checkRecordExist: ", checkRecordExist);
     if (checkRecordExist) {
       if (!checkRecordExist?.ctv) {
         const result = await OrderPostsModel.findByIdAndDelete(id);
@@ -365,4 +407,5 @@ module.exports = {
   updateRecord,
   receivedPost,
   refundPost,
+  updateStatusBanking,
 };
