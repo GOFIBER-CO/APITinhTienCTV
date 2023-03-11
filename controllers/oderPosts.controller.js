@@ -10,6 +10,7 @@ const insertNewOrderPosts = (req, res) => {
   let response = "";
   try {
     req.body.user = req?.user?.id;
+    req.body.text = Date.now();
     const resData = new OrderPostsModel(req.body);
     resData.save((err, data) => {
       if (err) {
@@ -186,22 +187,33 @@ const updateStatusBanking = async (req, res) => {
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
-    if (checkRecordExist) {
-      const result = await OrderPostsModel.findByIdAndUpdate(
-        id,
-        {
-          $set: { paymentStatus: true },
-        },
-        {
-          new: true,
-        }
-      );
-      response = new ResponseModel(200, "Cập nhập thành công.", result);
-      res.status(200).json(response);
+    console.log("checkRecordExist: ", checkRecordExist);
+    if (!checkRecordExist?.paymentStatus) {
+      if (checkRecordExist) {
+        const result = await OrderPostsModel.findByIdAndUpdate(
+          id,
+          {
+            $set: { paymentStatus: true, withdrawnDate: Date.now() },
+          },
+          {
+            new: true,
+          }
+        );
+        response = new ResponseModel(200, "Cập nhập thành công.", result);
+        res.status(200).json(response);
+      } else {
+        response = new ResponseModel(404, "Không tìm thấy bài viết.", null);
+        res.status(404).json(response);
+      }
     } else {
-      response = new ResponseModel(404, "Không tìm thấy bài viết.", null);
-      res.status(404).json(response);
+      response = new ResponseModel(
+        409,
+        "Bài viết này đã được thanh toán.",
+        null
+      );
+      res.status(200).json(response);
     }
+    return;
   } catch (error) {
     response = new ResponseModel(500, error.message, error);
     res.status(500).json(response);

@@ -49,6 +49,10 @@ const orderPostsSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    withdrawnDate: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

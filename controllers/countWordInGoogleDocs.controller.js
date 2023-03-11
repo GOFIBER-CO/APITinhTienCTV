@@ -1,7 +1,7 @@
 const ResponseModel = require("../helpers/ResponseModel");
 const OrderPostsModel = require("../models/orderPost.model");
 const countWord = async (req, res) => {
-  // console.log(`sdfsha`, req.body);
+  console.log(`rquyquy`, req.body);
   const { _id, minWord } = req.body;
   let response = "";
   try {
@@ -28,7 +28,7 @@ const countWord = async (req, res) => {
           $set: {
             link: link_post,
             statusOrderPost: 1,
-            currentWord:Number(number_word),
+            currentWord: Number(number_word),
           },
         },
         { new: true }

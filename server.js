@@ -195,8 +195,8 @@ function initial() {
 initial;
 cron.schedule(
   // "* * * * *", //1 phút chạy 1 lần
-  // "*/10 * * * * *", //10 giây chạy 1 lần
-  "0 1 * * *", // 0h ngày mai chạy 1 lần
+  "*/10 * * * * *", //10 giây chạy 1 lần
+  // "0 1 * * *", // 0h ngày mai chạy 1 lần
   // "47 9 * * *", // 1h ngày mai chạy 1 lần
 
   () => {
@@ -206,6 +206,7 @@ cron.schedule(
     Promise.all([
       scheduleController.checkExpiredOfOrderPostWhenCtvReceived(),
       scheduleController.checkExpiredOfOrderPostWhenHaveNotCtvReceived(),
+      scheduleController.checkOrderPostAlmostExpired(),
     ]);
   },
   {
