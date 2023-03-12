@@ -10,6 +10,7 @@ const insertNewOrderPosts = (req, res) => {
   let response = "";
   try {
     req.body.user = req?.user?.id;
+    req.body.text = Date.now();
     const resData = new OrderPostsModel(req.body);
     resData.save((err, data) => {
       if (err) {
@@ -36,6 +37,7 @@ const getListOrderPosts = async (req, res) => {
   let resultTotal = 0;
   const userId = req?.user?.id;
   const objSearch = {};
+
   if (req.body.title) {
     objSearch.title = { $regex: ".*" + req.body.title + ".*" };
   }
@@ -68,23 +70,22 @@ const getListOrderPosts = async (req, res) => {
   if (req.body.keyword) {
     objSearch.keyword = { $regex: ".*" + req.body.keyword + ".*" };
   }
+  if (req.body.status && req.body.status !== "2") {
+    objSearch.status = req.body?.status;
+  }
   if (req.body.ctv) {
     objSearch.ctv = new mongoose.Types.ObjectId(req.body.ctv);
   }
-  if (req.body.status && req.body.status !== "2") {
-    objSearch.status = req.body.status;
+  if (req.body.statusOrderPost && req.body.statusOrderPost !== "2") {
+    objSearch.statusOrderPost = req.body.statusOrderPost;
   }
   if (req.body.paymentStatus && req.body.paymentStatus !== "2") {
     let a = { 0: false, 1: true }?.[req.body.paymentStatus];
     objSearch.paymentStatus = a;
   }
   if (req.body.moneyPerWord) {
-    objSearch.moneyPerWord = req.body.moneyPerWord;
+    objSearch.moneyPerWord = { $gte: parseInt(req.body.moneyPerWord) };
   }
-  // if (req.body.paymentStatus) {
-  //   objSearch.status = req.body.status;
-  // }
-  console.log(objSearch);
   try {
     const checkUserRole = await UserModel.findById(userId).select("role");
     if (checkUserRole) {
@@ -93,6 +94,16 @@ const getListOrderPosts = async (req, res) => {
           objSearch["user"] = userId;
         }
         result = await OrderPostsModel.find({ $and: [objSearch] })
+          .populate("ctv")
+          .skip((pageIndex - 1) * pageSize)
+          .limit(pageSize)
+          .sort({ createdAt: -1 });
+        resultTotal = await OrderPostsModel.find({
+          $and: [objSearch],
+        }).countDocuments();
+      } else if (checkUserRole?.role === "Admin") {
+        result = await OrderPostsModel.find({ $and: [objSearch] })
+          .populate("ctv")
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize)
           .sort({ createdAt: -1 });
@@ -100,7 +111,13 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       } else {
-        result = await OrderPostsModel.find({ $and: [objSearch] })
+        objSearch.status = 1;
+        objSearch.isExpired = false;
+
+        objSearch._id = result = await OrderPostsModel.find({
+          $and: [objSearch],
+        })
+          .populate("ctv")
           .skip((pageIndex - 1) * pageSize)
           .limit(pageSize)
           .sort({ createdAt: -1 });
@@ -108,7 +125,6 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       }
-
       responsePage = new PagedModel(
         pageIndex,
         pageSize,
@@ -129,21 +145,30 @@ const getListOrderPosts = async (req, res) => {
 
 //Cập nhập kết quả hiện có
 const updateRecord = async (req, res) => {
+  console.log(`fakjhsdf`, req.body);
+  const { expired } = req.body;
+  const date = new Date(expired);
+  const timestamp = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+    date.getUTCMilliseconds()
+  );
+  const currentDate = Date.now();
+  if (timestamp > currentDate) req.body.isExpired = false;
   // req.body.user = req?.user?.id;
-  const { id } = req?.body;
-  // const { title, desc, moneyPerWord, keyword } = req.body;
+  const id = req?.body?._id || req?.body?.id;
+
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
     if (checkRecordExist) {
-      const result = await OrderPostsModel.findByIdAndUpdate(
-        id,
-        // { title, desc, moneyPerWord, keyword },
-        req.body,
-        {
-          new: true,
-        }
-      );
+      const result = await OrderPostsModel.findByIdAndUpdate(id, req.body, {
+        new: true,
+      });
       response = new ResponseModel(200, "Cập nhập thành công.", result);
       res.status(200).json(response);
     } else {
@@ -155,14 +180,52 @@ const updateRecord = async (req, res) => {
     res.status(500).json(response);
   }
 };
-
+//Cập nhập trạng thái
+const updateStatusBanking = async (req, res) => {
+  // console.log(`fakjhsdf`, req.body);
+  const id = req?.body?._id || req?.body?.id;
+  let response = "";
+  try {
+    const checkRecordExist = await OrderPostsModel.findById(id);
+    console.log("checkRecordExist: ", checkRecordExist);
+    if (!checkRecordExist?.paymentStatus) {
+      if (checkRecordExist) {
+        const result = await OrderPostsModel.findByIdAndUpdate(
+          id,
+          {
+            $set: { paymentStatus: true, withdrawnDate: Date.now() },
+          },
+          {
+            new: true,
+          }
+        );
+        response = new ResponseModel(200, "Cập nhập thành công.", result);
+        res.status(200).json(response);
+      } else {
+        response = new ResponseModel(404, "Không tìm thấy bài viết.", null);
+        res.status(404).json(response);
+      }
+    } else {
+      response = new ResponseModel(
+        409,
+        "Bài viết này đã được thanh toán.",
+        null
+      );
+      res.status(200).json(response);
+    }
+    return;
+  } catch (error) {
+    response = new ResponseModel(500, error.message, error);
+    res.status(500).json(response);
+  }
+};
 const receivedPost = async (req, res) => {
   let response = {};
   const user = req?.user?.id;
   try {
     const userInfo = await UserModel.findOne({ _id: user, role: "CTV" });
     if (userInfo) {
-      if (userInfo.star === userInfo.processingPost) {
+      if (userInfo.star <= userInfo.processingPost) {
         response = new ResponseModel(
           202,
           "Hiện tại số bài viết của bạn đã đạt giới hạn. Vui lòng hoàn thành để có thể nhận thêm",
@@ -184,7 +247,7 @@ const receivedPost = async (req, res) => {
               req.params.id,
               {
                 ctv: user,
-                status: 0,
+                statusOrderPost: 0,
               },
               {},
               (err, result) => {
@@ -239,6 +302,88 @@ const receivedPost = async (req, res) => {
   }
 };
 
+const refundPost = async (req, res) => {
+  let response = null;
+  try {
+    const id = req.params.id;
+    const user = req.user.id;
+    const postOrder = await OrderPostsModel.findOne({ _id: id, ctv: user });
+    if (!postOrder) {
+      response = new ResponseModel(400, "Post not found", "Post not found");
+      return res.status(400).json(response);
+    } else {
+      if (postOrder.statusOrderPost !== 0) {
+        response = new ResponseModel(
+          400,
+          "Post can't refund",
+          "Post can't refund"
+        );
+        return res.status(400).json(response);
+      } else {
+        OrderPostsModel.findByIdAndUpdate(
+          id,
+          {
+            ctv: null,
+            statusOrderPost: -1,
+          },
+          {},
+          async (err, result) => {
+            if (err) {
+              response = new ResponseModel(
+                400,
+                "Post can't refund",
+                "Post can't refund"
+              );
+              return res.status(400).json(response);
+            } else {
+              const userInfo = await UserModel.findOne({
+                _id: user,
+                role: "CTV",
+              });
+              if (!userInfo) {
+                response = new ResponseModel(
+                  400,
+                  "User not found",
+                  "User not found"
+                );
+                return res.status(400).json(response);
+              } else {
+                UserModel.findByIdAndUpdate(
+                  userInfo?._id,
+                  {
+                    star: parseInt(userInfo?.star) - 1,
+                    processingPost: parseInt(userInfo?.processingPost) - 1,
+                  },
+                  {},
+                  (errorUser, userUpdate) => {
+                    if (errorUser) {
+                      response = new ResponseModel(
+                        400,
+                        "User not found",
+                        "User not found"
+                      );
+                      return res.status(400).json(response);
+                    } else {
+                      response = new ResponseModel(
+                        200,
+                        "Refund Post Success",
+                        "Refund Post Success"
+                      );
+                      return res.status(200).json(response);
+                    }
+                  }
+                );
+              }
+            }
+          }
+        );
+      }
+    }
+  } catch (error) {
+    response = new ResponseModel(500, error.message, error);
+    return res.status(500).json(response);
+  }
+};
 // Xóa kết quả hiện có
 const deleteRecord = async (req, res) => {
   const { id } = req.params;
@@ -246,15 +391,19 @@ const deleteRecord = async (req, res) => {
 
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
-
     if (checkRecordExist) {
-      const result = await OrderPostsModel.findByIdAndDelete(id);
-      if (Object.keys(result).length > 0) {
-        response = new ResponseModel(200, "Xóa thành công.", result);
+      if (!checkRecordExist?.ctv) {
+        const result = await OrderPostsModel.findByIdAndDelete(id);
+        if (Object.keys(result).length > 0) {
+          response = new ResponseModel(200, "Xóa thành công.", result);
+          res.status(200).json(response);
+        }
+      } else {
+        response = new ResponseModel(200, "Bài viết đã có người nhận.", result);
         res.status(200).json(response);
       }
     } else {
-      response = new ResponseModel(404, "Không tìm thấy bài viết.", null);
+      response = new ResponseModel(200, "Không tìm thấy bài viết.", null);
       res.status(404).json(response);
     }
   } catch (error) {
@@ -269,4 +418,6 @@ module.exports = {
   deleteRecord,
   updateRecord,
   receivedPost,
+  refundPost,
+  updateStatusBanking,
 };

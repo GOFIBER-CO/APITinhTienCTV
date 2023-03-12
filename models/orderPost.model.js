@@ -21,13 +21,37 @@ const orderPostsSchema = new Schema(
       type: String,
       default: null,
     },
+    minWord: {
+      type: Number,
+    },
     note: {
       type: String,
       default: null,
     },
-    status: {
+    statusOrderPost: {
       type: Number,
       default: -1, //-1: chưa ai nhận || 0: đã có ctv nhận || 1: đã xong
+    },
+    expired: Date,
+    isExpired: {
+      type: Boolean,
+      default: false,
+    },
+    status: {
+      type: Number,
+      default: 1,
+    },
+    currentWord: {
+      type: Number,
+      default: 0,
+    },
+    isWithdrawn: {
+      type: Boolean,
+      default: false,
+    },
+    withdrawnDate: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

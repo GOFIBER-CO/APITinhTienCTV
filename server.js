@@ -9,7 +9,7 @@ require("dotenv").config();
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const fileUpload = require("express-fileupload");
-
+const cron = require("node-cron");
 const userRoutes = require("./routers/user.router");
 const ROLE = require("./helpers/role");
 const domainRoutes = require("./routers/domain.router");
@@ -20,6 +20,8 @@ const collaboratorRouter = require("./routers/collaborator.router");
 const roleRouter = require("./routers/role.router");
 const teamRouter = require("./routers/team.router");
 const orderPostsRouter = require("./routers/orderPosts.router");
+const countWordInGoogleDocsRouter = require("./routers/countWordInGoogleDocs.router");
+
 var origin_urls;
 if (process.env.NODE_ENV == "development") {
   origin_urls = [
@@ -52,6 +54,8 @@ const app = express();
 //models
 const Role = require("./models/role.model");
 const User = require("./models/user.model");
+// const checkExpiredOfOrderPostWhenCtvReceived = require("./controllers/schedule");
+const scheduleController = require("./controllers/schedule");
 //cors
 app.use(cors(corsOptions));
 app.use(fileUpload());
@@ -70,6 +74,7 @@ app.use(express.urlencoded({ extended: true }));
 mongoose.set("strictQuery", false);
 mongoose.connect(process.env.DATABASE_CLOUD, function (err) {
   if (err) {
+    console.log(err);
     console.log("Mongodb connected error");
   } else {
     console.log("Mongodb connected successfuly");
@@ -109,6 +114,7 @@ app.use("/api", collaboratorRouter);
 app.use("/api", roleRouter);
 app.use("/api", teamRouter);
 app.use("/api", orderPostsRouter);
+app.use("/api", countWordInGoogleDocsRouter);
 
 function initial() {
   Role.estimatedDocumentCount((err, count) => {
@@ -187,3 +193,24 @@ function initial() {
   });
 }
 initial;
+cron.schedule(
+  // "* * * * *", //1 phút chạy 1 lần
+  "*/10 * * * * *", //10 giây chạy 1 lần
+  // "0 1 * * *", // 0h ngày mai chạy 1 lần
+  // "47 9 * * *", // 1h ngày mai chạy 1 lần
+
+  () => {
+    console.log(
+      "Running a job at 01:00 at America/Sao_Paulo timezone " + Date.now()
+    );
+    Promise.all([
+      scheduleController.checkExpiredOfOrderPostWhenCtvReceived(),
+      scheduleController.checkExpiredOfOrderPostWhenHaveNotCtvReceived(),
+      scheduleController.checkOrderPostAlmostExpired(),
+    ]);
+  },
+  {
+    scheduled: true,
+    timezone: "Asia/Ho_Chi_Minh",
+  }
+);

@@ -77,6 +77,9 @@ async function editUser({
   role,
   status,
   team,
+  fullName,
+  stk,
+  bank_name,
 }) {
   const roleQuery = await Role.findOne({ name: role });
   // var userQuery = await userModel.findById(id);
@@ -90,6 +93,9 @@ async function editUser({
     role: roleQuery.name,
     status: status,
     team: team,
+    fullName,
+    stk,
+    bank_name,
     // passwordHash:
     //   // password && password.length
     //   //   ? bcrypt.hashSync(password, 10)
@@ -107,12 +113,23 @@ async function editUser({
   // }
 }
 
-async function editProfile(username, firstname, lastname, id) {
+async function editProfile(
+  username,
+  firstname,
+  lastname,
+  id,
+  stk,
+  bank_name,
+  fullName
+) {
   try {
     const user = await User.findByIdAndUpdate(id, {
       username: username,
       firstName: firstname,
       lastName: lastname,
+      stk,
+      bank_name,
+      fullName,
     });
     return user;
   } catch (error) {
@@ -177,6 +194,7 @@ async function authenticate({ username, password, ipAddress }) {
   // authentication successful so generate jwt and refresh tokens
   const jwtToken = generateJwtToken(user);
   const refreshToken = generateRefreshToken(user, ipAddress);
+
   // save refresh token
   await refreshToken.save();
 
@@ -302,9 +320,32 @@ function randomTokenString() {
 }
 
 function basicDetails(user) {
-  const { id, firstName, lastName, username, role, avatar, status, team } =
-    user;
-  return { id, firstName, lastName, username, role, avatar, status, team };
+  const {
+    id,
+    firstName,
+    lastName,
+    username,
+    role,
+    avatar,
+    status,
+    team,
+    fullName,
+    stk,
+    bank_name,
+  } = user;
+  return {
+    id,
+    firstName,
+    lastName,
+    username,
+    role,
+    avatar,
+    status,
+    team,
+    fullName,
+    stk,
+    bank_name,
+  };
 }
 
 function basicDetails1(user) {

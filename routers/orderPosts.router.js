@@ -23,9 +23,20 @@ router.delete(
   authorize(),
   orderPostController.deleteRecord
 );
+router.get(
+  "/order-post/refund/:id",
+  authorize(),
+  orderPostController.refundPost
+);
+router.patch(
+  "/order-post/update/banking",
+  authorize(),
+  orderPostController.updateStatusBanking
+);
 router.patch(
   "/order-post/update",
   authorize(),
   orderPostController.updateRecord
 );
+
 module.exports = router;
