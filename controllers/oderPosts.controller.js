@@ -62,7 +62,6 @@ const getListOrderPosts = async (req, res) => {
     );
     objSearch["createdAt"] = { $gte: startDate, $lte: endDate };
   }
-
   if (req.body.moneyPerWord) {
     objSearch.moneyPerWord = { $gte: req.body.moneyPerWord };
   }
@@ -111,10 +110,12 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       } else {
+        console.log(`vao day`);
         objSearch.status = 1;
         objSearch.isExpired = false;
+        console.log("objSearch:", objSearch);
 
-        objSearch._id = result = await OrderPostsModel.find({
+        result = await OrderPostsModel.find({
           $and: [objSearch],
         })
           .populate("ctv")
@@ -125,6 +126,8 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       }
+      console.log("result:", result);
+
       responsePage = new PagedModel(
         pageIndex,
         pageSize,
