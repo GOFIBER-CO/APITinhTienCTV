@@ -5,6 +5,11 @@ const Role = require("../helpers/role");
 const userModel = require("../models/user.model");
 const User = require("../models/user.model");
 const PagedModel = require("../models/PagedModel");
+const {
+  permissionScreenCTV,
+  permissionScreenMember,
+  permissionScreenAdmin,
+} = require("../common");
 
 async function signup(req, res) {
   const {
@@ -44,7 +49,17 @@ async function signup(req, res) {
 
 async function editUser(req, res) {
   const id = req.params?.id;
-  const { username, firstName, lastName, role, status, team } = req.body;
+  const {
+    username,
+    firstName,
+    lastName,
+    role,
+    status,
+    team,
+    stk,
+    bank_name,
+    fullName,
+  } = req.body;
   var user = await userService.editUser({
     id,
     username,
@@ -53,6 +68,9 @@ async function editUser(req, res) {
     role,
     status,
     team,
+    stk,
+    bank_name,
+    fullName,
     // password:'',
   });
   if (!user) {
@@ -65,8 +83,17 @@ async function editUser(req, res) {
 }
 
 async function editProfile(req, res) {
-  const { firstname, lastname, username, id } = req.body;
-  var user = await userService.editProfile(username, firstname, lastname, id);
+  const { firstname, lastname, username, id, stk, bank_name, fullName } =
+    req.body;
+  var user = await userService.editProfile(
+    username,
+    firstname,
+    lastname,
+    id,
+    stk,
+    bank_name,
+    fullName
+  );
   if (!user) {
     return res
       .status(400)
@@ -307,13 +334,17 @@ function getUserPermissionById(req, res, next) {
 
 async function editUserPermission(req, res) {
   const id = req.params?.id;
-  const { username, firstName, lastName, role } = req.body;
+  const { username, firstName, lastName, role, fullName, stk, bank_name } =
+    req.body;
   var user = await userService.editUser({
     id,
     username,
     firstName,
     lastName,
     role,
+    fullName,
+    stk,
+    bank_name,
   });
   if (!user) {
     return res
@@ -321,6 +352,71 @@ async function editUserPermission(req, res) {
       .json({ message: `Can't Update user or role does not exist` });
   } else {
     return res.json(user);
+  }
+}
+
+async function checkScreenPermission(req, res) {
+  try {
+    const id = req.user.id;
+    const { screen } = req.body;
+    const userInfo = await User.findById(id);
+    if (!userInfo) {
+      return res.status(400).json({ message: `User not found` });
+    } else {
+      let check = false;
+      switch (userInfo?.role) {
+        case "CTV":
+          check = permissionScreenCTV.includes(screen);
+          return res.json({ status: check });
+        case "Member":
+          check = permissionScreenMember.includes(screen);
+          return res.json({ status: check });
+        default:
+          check = permissionScreenAdmin.includes(screen);
+          return res.json({ status: check });
+      }
+    }
+  } catch (error) {
+    return res.status(400).json({ message: `Can't check role user` });
+  }
+}
+
+async function checkScreenPermission(req, res) {
+  try {
+    const id = req.user.id;
+    const { screen } = req.body;
+    const userInfo = await User.findById(id);
+    if (!userInfo) {
+      return res.status(400).json({ message: `User not found` });
+    } else {
+      let check = false;
+      switch (userInfo?.role) {
+        case "CTV":
+          check = permissionScreenCTV.includes(screen);
+          return res.json({ status: check });
+        case "Member":
+          check = permissionScreenMember.includes(screen);
+          return res.json({ status: check });
+        default:
+          check = permissionScreenAdmin.includes(screen);
+          return res.json({ status: check });
+      }
+    }
+  } catch (error) {
+    return res.status(400).json({ message: `Can't check role user` });
+  }
+}
+
+async function getUserCTV(req, res) {
+  try {
+    const userInfo = await User.find({ role: "CTV" });
+    if (!userInfo) {
+      return res.status(400).json({ message: `User not found` });
+    } else {
+      return res.json({ users: userInfo });
+    }
+  } catch (error) {
+    return res.status(400).json({ message: `Can't get list CTV` });
   }
 }
 
@@ -360,4 +456,6 @@ module.exports = {
   getUserPermissionById,
   editUserPermission,
   removeUserPermission,
+  checkScreenPermission,
+  getUserCTV,
 };

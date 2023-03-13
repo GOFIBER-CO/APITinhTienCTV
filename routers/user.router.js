@@ -23,6 +23,8 @@ const {
   editUserPermission,
   removeUserPermission,
   getPaging,
+  checkScreenPermission,
+  getUserCTV,
 } = require("../controllers/user.controller");
 const permissionFunction = require("../helpers/permissionFunction");
 const permissionFieldName = require("../helpers/permissionFieldName");
@@ -147,9 +149,11 @@ router.get("/users", getAll);
  *        $ref: '#/components/responses/UnauthorizedError'
  *
  */
-router.get("/users/:id"
-// , authorize()
-, getById);
+router.get(
+  "/users/:id",
+  // , authorize()
+  getById
+);
 
 /**
  * @swagger
@@ -247,9 +251,11 @@ router.get("/users/:id/refresh-tokens", authorize(), getRefreshTokens);
  *
  */
 
-router.get("/users/user/search"
-// , authorize()
-, searchUser);
+router.get(
+  "/users/user/search",
+  // , authorize()
+  searchUser
+);
 
 /**
  * @swagger
@@ -518,9 +524,11 @@ router.delete(
   deleteAvatar
 );
 router.patch("/user/editAvatar", authorize(), editAvatar);
-router.patch("/user/editProfile"
-// , authorize()
-, editProfile);
+router.patch(
+  "/user/editProfile",
+  // , authorize()
+  editProfile
+);
 
 /**
  * @swagger
@@ -561,7 +569,7 @@ router.patch("/user/editProfile"
  *
  */
 router.delete("/users/delete/:id", removeUser);
-
+router.get("/users/user/getCTV", authorize(), getUserCTV);
 router.post("/users/user/permission", authorize(), createUserPermission);
 router.get("/users/user/permission/:id", authorize(), getUserPermissionById);
 router.put(
@@ -569,6 +577,8 @@ router.put(
   authorize(Role.Admin),
   editUserPermission
 );
+
+router.post("/users/user/permissionScreen", authorize(), checkScreenPermission);
 router.delete(
   "/users/user/permission/delete/:id",
   authorize(Role.Admin),
