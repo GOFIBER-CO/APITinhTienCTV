@@ -1,3 +1,6 @@
+
+
+
 const filter = ["\n", " ", ""];
 function getNumberOfWord(body = {}, image = {}) {
   if (!body) {
@@ -8,6 +11,19 @@ function getNumberOfWord(body = {}, image = {}) {
 
     let content = body?.content;
     content?.map((value) => {
+      if(value?.table){
+        value.table?.tableRows?.map(itemRow =>{
+          itemRow?.tableCells?.map(itemCell =>{
+            itemCell?.content[0]?.paragraph?.elements?.map((item) => {
+              number_word =
+                number_word +
+                (item?.textRun?.content
+                  ?.split(" ")
+                  ?.filter((i) => i !== "\n" && i !== "" )?.length || 0);
+            });
+          })
+        })
+      }
       value?.paragraph?.elements?.map((item) => {
         number_word =
           number_word +
@@ -22,6 +38,6 @@ function getNumberOfWord(body = {}, image = {}) {
   }
 }
 
-getNumberOfWord();
+console.log(getNumberOfWord(a.body))
 
 module.exports = getNumberOfWord;
