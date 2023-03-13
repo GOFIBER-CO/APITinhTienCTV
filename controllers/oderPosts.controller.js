@@ -164,7 +164,7 @@ const updateRecord = async (req, res) => {
   if (timestamp > currentDate) req.body.isExpired = false;
   // req.body.user = req?.user?.id;
   const id = req?.body?._id || req?.body?.id;
-
+  req.body.isExpired = false;
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
