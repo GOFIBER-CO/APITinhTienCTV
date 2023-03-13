@@ -203,7 +203,7 @@ cron.schedule(
 
   () => {
     console.log(
-      "Running a job at 01:00 at America/Sao_Paulo timezone " + Date.now()
+      "Running a job at 01:00 at Asian/Ho_Chi_MInh timezone " + Date.now()
     );
 
     Promise.all([

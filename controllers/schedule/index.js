@@ -53,8 +53,7 @@ const checkExpiredOfOrderPostWhenHaveNotCtvReceived = async (req, res) => {
   const newYesterday = yesterday.format("YYYY-MM-DD");
   const startDate = `${newYesterday}T00:00:00Z`;
   const endDate = `${currentDay}T00:00:00Z`;
-  // console.log("startDate:", startDate);
-  // console.log("endDate:", endDate);
+  
   try {
     await OrderPostsModel.updateMany(
       {
