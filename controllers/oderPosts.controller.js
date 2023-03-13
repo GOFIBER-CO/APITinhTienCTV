@@ -62,7 +62,6 @@ const getListOrderPosts = async (req, res) => {
     );
     objSearch["createdAt"] = { $gte: startDate, $lte: endDate };
   }
-
   if (req.body.moneyPerWord) {
     objSearch.moneyPerWord = { $gte: req.body.moneyPerWord };
   }
@@ -114,7 +113,7 @@ const getListOrderPosts = async (req, res) => {
         objSearch.status = 1;
         objSearch.isExpired = false;
 
-        objSearch._id = result = await OrderPostsModel.find({
+        result = await OrderPostsModel.find({
           $and: [objSearch],
         })
           .populate("ctv")
@@ -125,6 +124,7 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       }
+
       responsePage = new PagedModel(
         pageIndex,
         pageSize,
@@ -145,7 +145,6 @@ const getListOrderPosts = async (req, res) => {
 
 //Cập nhập kết quả hiện có
 const updateRecord = async (req, res) => {
-  console.log(`fakjhsdf`, req.body);
   const { expired } = req.body;
   const date = new Date(expired);
   const timestamp = Date.UTC(
@@ -182,12 +181,10 @@ const updateRecord = async (req, res) => {
 };
 //Cập nhập trạng thái
 const updateStatusBanking = async (req, res) => {
-  // console.log(`fakjhsdf`, req.body);
   const id = req?.body?._id || req?.body?.id;
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
-    console.log("checkRecordExist: ", checkRecordExist);
     if (!checkRecordExist?.paymentStatus) {
       if (checkRecordExist) {
         const result = await OrderPostsModel.findByIdAndUpdate(

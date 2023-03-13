@@ -59,7 +59,6 @@ const createExcel = async (req, res) => {
     let countMatch = 0;
     const result = await Promise.all(
       data.map(async (item) => {
-        // console.log(item,'item');
         let a = {
           link_post: item?.link_post,
           link_posted: item?.link_posted,
@@ -86,8 +85,6 @@ const createExcel = async (req, res) => {
           isDesign,
           isPosted,
         } = a;
-        // console.log(a, 'dât');
-        // return
         let id_post = link_post?.split("/")[5];
         const checkExists = await LinkManagement.findOne({
           link_post: { $regex: id_post },

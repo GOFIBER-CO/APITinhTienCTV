@@ -1,7 +1,6 @@
 const ResponseModel = require("../helpers/ResponseModel");
 const OrderPostsModel = require("../models/orderPost.model");
 const countWord = async (req, res) => {
-  console.log(`rquyquy`, req.body);
   const { _id, minWord } = req.body;
   let response = "";
   try {
@@ -33,7 +32,6 @@ const countWord = async (req, res) => {
         },
         { new: true }
       );
-      // console.log("rs: ", rs);
       response = new ResponseModel(200, `Thành công`, rs);
       res.status(200).json(response);
     } else {
@@ -45,8 +43,6 @@ const countWord = async (req, res) => {
       response = new ResponseModel(200, `${number_word}/${minWord}`, {});
       res.status(200).json(response);
     }
-    // console.log("number_word: ", number_word);
-    // console.log("number_image: ", number_image);
   } catch (error) {
     response = new ResponseModel(200, "Lỗi server", []);
     res.status(500).json(response);

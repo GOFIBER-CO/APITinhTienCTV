@@ -20,7 +20,7 @@ const notificationSchema = new mongoose.Schema(
     isRead: { type: Boolean, default: false },
     type: {
       type: Number,
-      default: 1, // 1: thành công, 0 : lỗi, -1:cảnh báo
+      default: 1, //1:sắp  hết hạn, 2 quá hạn.
     },
   },
   { timestamps: true }

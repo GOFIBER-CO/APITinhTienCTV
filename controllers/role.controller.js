@@ -22,7 +22,6 @@ const editRolePermission = async (req, res) => {
 
 const deleteRole = async (req, res) => {
     try {
-        console.log(req.body.id)
         const result = await Role.findByIdAndDelete(req.body.id)
         return res.status(200).json({message: "success"})
     } catch (error) {

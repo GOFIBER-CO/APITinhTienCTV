@@ -129,7 +129,6 @@ async function deleteAvatar(req, res) {
 }
 
 async function searchUser(req, res) {
-  console.log(req.query, "search");
   // return;
   const search = req.query?.search;
   var query = await userService.search(search);
@@ -137,7 +136,6 @@ async function searchUser(req, res) {
 }
 
 async function removeUser(req, res) {
-  console.log(req.params, "id");
   const id = req.params?.id;
   var user = await userService.removeUser(id);
   if (user) {
@@ -278,7 +276,6 @@ function getById(req, res, next) {
 }
 
 function getRefreshTokens(req, res, next) {
-  console.log(req.user.role, "aaaaa");
   // users can get their own refresh tokens and admins can get any user's refresh tokens
   if (req.params.id !== req.user.id && req.user.role !== Role.Admin) {
     return res.status(401).json({ message: "Unauthorized" });

@@ -35,7 +35,6 @@ class TeamController {
     }
   }
   async update(req, res) {
-    console.log(req.body, "body", req.params.id, "id");
     try {
       const id = req.params.id;
       let match = await Team.findById(id);
