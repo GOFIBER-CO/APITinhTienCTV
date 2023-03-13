@@ -53,10 +53,7 @@ const orderPostsSchema = new Schema(
       type: Date,
       default: null,
     },
-    accept: {
-      type: Boolean,
-      default: null,
-    },
+   
   },
   { timestamps: true }
 );

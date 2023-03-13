@@ -172,7 +172,6 @@ const getCollaboratorsByDomainId = async (
   dateFrom = "",
   dateTo = ""
 ) => {
-  console.log(dateFrom, dateTo, "aaa");
   try {
     const data = await Collaborator.aggregate([
       {

@@ -110,10 +110,8 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       } else {
-        console.log(`vao day`);
         objSearch.status = 1;
         objSearch.isExpired = false;
-        console.log("objSearch:", objSearch);
 
         result = await OrderPostsModel.find({
           $and: [objSearch],
@@ -126,7 +124,6 @@ const getListOrderPosts = async (req, res) => {
           $and: [objSearch],
         }).countDocuments();
       }
-      console.log("result:", result);
 
       responsePage = new PagedModel(
         pageIndex,
@@ -148,7 +145,6 @@ const getListOrderPosts = async (req, res) => {
 
 //Cập nhập kết quả hiện có
 const updateRecord = async (req, res) => {
-  console.log(`fakjhsdf`, req.body);
   const { expired } = req.body;
   const date = new Date(expired);
   const timestamp = Date.UTC(
@@ -185,12 +181,10 @@ const updateRecord = async (req, res) => {
 };
 //Cập nhập trạng thái
 const updateStatusBanking = async (req, res) => {
-  // console.log(`fakjhsdf`, req.body);
   const id = req?.body?._id || req?.body?.id;
   let response = "";
   try {
     const checkRecordExist = await OrderPostsModel.findById(id);
-    console.log("checkRecordExist: ", checkRecordExist);
     if (!checkRecordExist?.paymentStatus) {
       if (checkRecordExist) {
         const result = await OrderPostsModel.findByIdAndUpdate(

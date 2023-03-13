@@ -13,9 +13,14 @@ const checkExpiredOfOrderPostWhenCtvReceived = async (req, res) => {
   const startDate = `${currentDay}T00:00:00Z`;
   try {
     const aa = await OrderPostsModel.find({
-      $and: [{ ctv: { $ne: null }, expired: { $lt: startDate } }],
+      $and: [
+        {
+          ctv: { $ne: null },
+          expired: { $lt: startDate },
+          statusOrderPost: { $ne: 1 },
+        },
+      ],
     });
-    // console.log("aa:", aa);
     aa.map(async (item) => {
       const to = item?.ctv;
       const orderPostId = item?._id;
@@ -26,9 +31,23 @@ const checkExpiredOfOrderPostWhenCtvReceived = async (req, res) => {
 
     await OrderPostsModel.updateMany(
       {
-        $and: [{ ctv: { $ne: null }, expired: { $lt: startDate } }],
+        $and: [
+          {
+            ctv: { $ne: null },
+            expired: { $lt: startDate },
+            statusOrderPost: { $ne: 1 },
+          },
+        ],
       },
-      { $set: { isExpired: true, status: 0, ctv: null, statusOrderPost: -1 } }
+      {
+        $set: {
+          isExpired: true,
+          status: 0,
+          ctv: null,
+          statusOrderPost: -1,
+          paymentStatus: false,
+        },
+      }
     );
     const isExpiredPost = await OrderPostsModel.find({ isExpired: true });
     const userIds = isExpiredPost.map((post) => post?.ctv);
@@ -53,7 +72,7 @@ const checkExpiredOfOrderPostWhenHaveNotCtvReceived = async (req, res) => {
   const newYesterday = yesterday.format("YYYY-MM-DD");
   const startDate = `${newYesterday}T00:00:00Z`;
   const endDate = `${currentDay}T00:00:00Z`;
-  
+
   try {
     await OrderPostsModel.updateMany(
       {
@@ -79,15 +98,14 @@ const checkOrderPostAlmostExpired = async (req, res) => {
   const startDate = `${currentDay}T00:00:00Z`;
   const endDate = `${currentDay}T23:59:59Z`;
 
-  // const yesterday = moment(today).subtract(1, "day"); // Lấy thời điểm trước đó 1 ngày
   const listOrderPostAlmostExpired = await OrderPostsModel.find({
     expired: {
       $gt: new Date(startDate),
       $lt: new Date(endDate),
     },
     status: 1,
+    ctv: { $ne: null },
   }).populate("ctv");
-  // console.log("listOrderPostAlmostExpired:", listOrderPostAlmostExpired);
 
   listOrderPostAlmostExpired.map(async (item) => {
     const to = item?.ctv;
@@ -100,12 +118,13 @@ const checkOrderPostAlmostExpired = async (req, res) => {
 const getPagingNotifications = async (req, res) => {
   try {
     const notification = await NotificationModel.find({ to: req.user?.id })
+      .sort({ updatedAt: -1 })
       .populate("to")
       .populate("orderPostId");
     const quantityNotificationNotRead = await NotificationModel.aggregate([
       {
         $group: {
-          _id: null,
+          _id: "$to",
           count: {
             $sum: {
               $cond: [{ $eq: ["$isRead", false] }, 1, 0],
@@ -114,10 +133,14 @@ const getPagingNotifications = async (req, res) => {
         },
       },
     ]);
+    // console.log("quantityNotificationNotRead:", quantityNotificationNotRead);
+    let rs = quantityNotificationNotRead?.map((item) => {
+      return item?._id == req.user?.id;
+    });
     return res.json({
       status: 1,
       data: notification,
-      count: quantityNotificationNotRead[0]?.count,
+      count: rs[0]?.count,
     });
   } catch (error) {
     console.log(error);
@@ -134,7 +157,6 @@ const updateStatusRead = async (req, res) => {
       },
       { $set: { isRead: true } }
     );
-    console.log("rs:", rs);
   } catch (error) {
     res.status(500).json({ error: "Lỗi server", message: error.message });
   }

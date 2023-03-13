@@ -382,7 +382,7 @@ function basicUserPermissionDetails(userPermission) {
 async function getUserPermission(id) {
   if (!isValidId(id)) return { message: "User not found" };
   const userPermissions = await UserPermission.find({ userId: id });
-  console.log(userPermissions);
+  // console.log(userPermissions);
   if (!userPermissions) return { message: "User not found" };
   return userPermissions;
 }
@@ -436,10 +436,10 @@ async function editUserPermission({
 }
 
 async function removeUserPermission(id) {
-  console.log(id);
+  // console.log(id);
 
   const userPermission = await UserPermission.deleteMany({ userId: id });
-  console.log(userPermission);
+  // console.log(userPermission);
 
   return userPermission;
 }
