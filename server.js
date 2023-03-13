@@ -22,6 +22,8 @@ const teamRouter = require("./routers/team.router");
 const orderPostsRouter = require("./routers/orderPosts.router");
 const countWordInGoogleDocsRouter = require("./routers/countWordInGoogleDocs.router");
 
+const scheduleRouter = require("./routers/schedule.router");
+
 var origin_urls;
 if (process.env.NODE_ENV == "development") {
   origin_urls = [
@@ -115,7 +117,7 @@ app.use("/api", roleRouter);
 app.use("/api", teamRouter);
 app.use("/api", orderPostsRouter);
 app.use("/api", countWordInGoogleDocsRouter);
-
+app.use("/api", scheduleRouter);
 function initial() {
   Role.estimatedDocumentCount((err, count) => {
     if (!err && count === 0) {
@@ -195,14 +197,15 @@ function initial() {
 initial;
 cron.schedule(
   // "* * * * *", //1 phút chạy 1 lần
-  "*/10 * * * * *", //10 giây chạy 1 lần
-  // "0 1 * * *", // 0h ngày mai chạy 1 lần
+  // "*/10 * * * * *", //10 giây chạy 1 lần
+  "0 1 * * *", // 0h ngày mai chạy 1 lần
   // "47 9 * * *", // 1h ngày mai chạy 1 lần
 
   () => {
     console.log(
       "Running a job at 01:00 at America/Sao_Paulo timezone " + Date.now()
     );
+
     Promise.all([
       scheduleController.checkExpiredOfOrderPostWhenCtvReceived(),
       scheduleController.checkExpiredOfOrderPostWhenHaveNotCtvReceived(),
